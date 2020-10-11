@@ -42,7 +42,8 @@ public class SinkInWaterGoal extends Goal
 				Iterable<BlockPos> digPositions = BlockPos.getAllInBoxMutable(posX-1, posY-1, posZ-1, posX+1, posY-1, posZ+1);
 				for (BlockPos checkPos : digPositions)
 				{
-					if (Froglins.DIGGABLE_TAG.contains(world.getBlockState(checkPos).getBlock()))
+					boolean tryDig = (checkPos.getX() == pos.getX() && checkPos.getZ() == pos.getZ()) || world.rand.nextInt(4) == 0;
+					if (tryDig && Froglins.DIGGABLE_TAG.contains(world.getBlockState(checkPos).getBlock()))
 					{
 						world.removeBlock(checkPos, false);
 					}
