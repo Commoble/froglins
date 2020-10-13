@@ -1,5 +1,8 @@
 package commoble.froglins;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import commoble.froglins.ai.MoveToWaterGoal;
 import commoble.froglins.ai.PredicatedGoal;
 import commoble.froglins.ai.SinkInWaterGoal;
@@ -8,6 +11,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.CreatureAttribute;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
@@ -25,6 +29,8 @@ import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.entity.passive.SquidEntity;
 import net.minecraft.entity.passive.fish.AbstractGroupFishEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTDynamicOps;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundEvent;
@@ -32,15 +38,22 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome.RainType;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.ForgeMod;
 
 public class FroglinEntity extends MonsterEntity
 {
+	public static final String DATA = "FroglinData";
+	
+	public FroglinData data = new FroglinData();
 
 	public FroglinEntity(EntityType<? extends FroglinEntity> type, World worldIn)
 	{
 		super(type, worldIn);
 	}
+	
+	////// Entity Properties //////
 
 	public static AttributeModifierMap.MutableAttribute createAttributes()
 	{
@@ -90,23 +103,12 @@ public class FroglinEntity extends MonsterEntity
 		this.targetSelector.addGoal(5, new PredicatedGoal<>(this,
 			new NearestAttackableTargetGoal<>(this, PlayerEntity.class, true),
 			FroglinEntity::getWantsToHunt));
-		
-		
 	}
 
 	@Override
 	public boolean canDespawn(double distanceToClosestPlayer)
 	{
-		return this.idleTime > Froglins.INSTANCE.serverConfig.froglinDespawnDelay.get() && super.canDespawn(distanceToClosestPlayer);
-	}
-
-	@Override
-	protected void idle()
-	{
-		// for all MobEntities, idle time increments by +1/tick when a player isn't within 32 meters (and resets if a player is near)
-		// for MonsterEntities, idle() increments idle time by an additional +2/tick while the monster is in daylight
-		// we don't need the extra idle time for this monster, we want it to hang out underwater
-		// so we override this method to do nothing
+		return this.idleTime > this.data.getFullness() && super.canDespawn(distanceToClosestPlayer);
 	}
 
 	// same as players (zombies are -0.45, skeletons are -0.6)
@@ -177,6 +179,77 @@ public class FroglinEntity extends MonsterEntity
 			? this.getHuntingBlockPathWeight(pos, world)
 			: this.getHidingBlockPathWeight(pos, world);
 	}
+	
+	////// Minecraft Events //////
+
+	@Override
+	protected void idle()
+	{
+		// for all MobEntities, idle time increments by +1/tick when a player isn't within 32 meters (and resets if a player is near)
+		// for MonsterEntities, idle() (which is declared by MonsterEntity) increments idle time by an additional +2/tick while the monster is in daylight
+		// we don't need the extra idle time for this monster, we want it to hang out underwater
+		// so we override this method to do nothing
+	}
+
+	@Override
+	public void tick()
+	{
+		super.tick();
+		if (!this.world.isRemote)	// do game logic on server
+		{
+			if (!this.dead) // make sure we only do these things if we didn't die during super.tick()
+			{
+				// slowly heal while in water
+				if (!this.dead && this.isInWater() && this.world.getRandom().nextInt() % 20 == 0)
+				{
+					this.heal(1F);
+				}
+				
+				if (this.data.getFullness() > 0)
+				{
+					this.data.decrementFullness();
+				}
+				else
+				{
+					this.data.setFullness(0);
+				}
+			}
+		}
+	}
+
+	// called when this entity kills another entity
+	@Override
+	public void func_241847_a(ServerWorld world, LivingEntity killedEntity)
+	{
+		super.func_241847_a(world, killedEntity);
+		this.data.addFullness(Froglins.INSTANCE.serverConfig.froglinFullnessFromKill.get());
+	}
+	
+	////// Syncing and Saving //////
+
+	@Override
+	public void writeAdditional(CompoundNBT compound)
+	{
+		super.writeAdditional(compound);
+		FroglinData.CODEC.encodeStart(NBTDynamicOps.INSTANCE, this.data)
+			.result()
+			.ifPresent(dataTag -> compound.put(DATA, dataTag));
+		;
+	}
+
+	/**
+	 * (abstract) Protected helper method to read subclass entity data from NBT.
+	 */
+	@Override
+	public void readAdditional(CompoundNBT compound)
+	{
+		super.readAdditional(compound);
+		FroglinData.CODEC.parse(NBTDynamicOps.INSTANCE, compound.get(DATA))
+			.result()
+			.ifPresent(readData -> this.data = readData);
+	}
+	
+	////// Froglin-Specific Status and Properties //////
 
 	// note that nighttime spawning will use the hunting path weight
 	// this needs to ensure that any block we would want to spawn in (e.g. water) >= 0
@@ -208,21 +281,50 @@ public class FroglinEntity extends MonsterEntity
 	{
 		// !world.isDayTime evaluates true when we are in a world with no daylight cycle
 		// world.isNightTime evaluates false in such worlds
-		return !this.world.isDaytime() && !this.isLowLife();
+		return this.isHungry() && this.doesWeatherAllowHunting() && !this.isLowLife();
+	}
+	
+	// return true if the sun isn't out or it's raining
+	public boolean doesWeatherAllowHunting()
+	{
+		return !this.world.isDaytime() || 
+			(this.world.isRaining() &&
+				this.world.getBiome(this.getPosition())
+				.getPrecipitation() == RainType.RAIN);
 	}
 	
 	public boolean isLowLife()
 	{
 		return this.getHealth() / this.getMaxHealth() < 0.3F;
 	}
-
-	@Override
-	public void tick()
+	
+	public boolean isHungry()
 	{
-		super.tick();
-		if (!this.world.isRemote && !this.dead && this.isInWater() && this.world.getRandom().nextInt() % 20 == 0)
+		return this.data.getFullness() <= 0;
+	}
+	
+	public static class FroglinData
+	{
+		public static final FroglinData EMPTY = new FroglinData();
+		
+		public static final Codec<FroglinData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+					Codec.INT.optionalFieldOf("fullness", 0).forGetter(FroglinData::getFullness)
+				).apply(instance, FroglinData::new));
+		
+		private int fullness = 0;
+		public int getFullness() { return this.fullness; }
+		public void setFullness(int value) { this.fullness = value; }
+		public void addFullness(int value) { this.fullness += value; }
+		public void decrementFullness() { --this.fullness; }
+		
+		public FroglinData()
 		{
-			this.heal(1F);
+			this(0);
+		}
+		
+		public FroglinData(int fullness)
+		{
+			this.fullness = fullness;
 		}
 	}
 }
