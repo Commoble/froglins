@@ -20,6 +20,9 @@ public class MoveToWaterGoal extends Goal
 	private double y;
 	private double z;
 	
+	private boolean isRunning = false;
+	public boolean getIsRunning() { return this.isRunning; }
+	
 	public MoveToWaterGoal(FroglinEntity froglin, double speedMultiplier)
 	{
 		this.froglin = froglin;
@@ -60,7 +63,14 @@ public class MoveToWaterGoal extends Goal
 	@Override
 	public void startExecuting()
 	{
+		this.isRunning = true;
 		this.froglin.getNavigator().tryMoveToXYZ(this.x, this.y, this.z, this.speedMultiplier);
+	}
+	
+	@Override
+	public void resetTask()
+	{
+		this.isRunning = false;
 	}
 
 	@Nullable

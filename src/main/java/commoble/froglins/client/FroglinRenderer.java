@@ -10,11 +10,11 @@ public class FroglinRenderer extends MobRenderer<FroglinEntity, FroglinModel>
 {
 	public static final ResourceLocation TEXTURE_LOCATION = new ResourceLocation(Froglins.MODID, "textures/entity/froglin.png");
 	
-	public static final FroglinModel MODEL = new FroglinModel();
+	public static final FroglinModel MODEL = new FroglinModel(0F);
 
 	public FroglinRenderer(EntityRendererManager renderManagerIn)
 	{
-		super(renderManagerIn, new FroglinModel(), 0.5F);
+		super(renderManagerIn, MODEL, 0.5F);
 	}
 
 	@Override

@@ -3,6 +3,7 @@ package commoble.froglins;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import commoble.froglins.ai.JumpSometimesGoal;
 import commoble.froglins.ai.MoveToWaterGoal;
 import commoble.froglins.ai.PredicatedGoal;
 import commoble.froglins.ai.SinkInWaterGoal;
@@ -16,11 +17,14 @@ import net.minecraft.entity.Pose;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.HurtByTargetGoal;
+import net.minecraft.entity.ai.goal.LeapAtTargetGoal;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookRandomlyGoal;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
+import net.minecraft.entity.ai.goal.PanicGoal;
 import net.minecraft.entity.ai.goal.RandomWalkingGoal;
+import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.monster.MonsterEntity;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.passive.CowEntity;
@@ -47,6 +51,11 @@ public class FroglinEntity extends MonsterEntity
 	public static final String DATA = "FroglinData";
 	
 	public FroglinData data = new FroglinData();
+	
+	// make a reference to this so we can check if this is running or not
+	// we can't set it here because registerGoals is called from MobEntity's constructor
+	// i.e. *before* FroglinEntity's constructor
+	private MoveToWaterGoal moveToWaterGoal;
 
 	public FroglinEntity(EntityType<? extends FroglinEntity> type, World worldIn)
 	{
@@ -60,18 +69,29 @@ public class FroglinEntity extends MonsterEntity
 //		return MonsterEntity.func_234295_eP_(); // standard attributes
 		return MonsterEntity.func_234295_eP_()
 			.createMutableAttribute(Attributes.FOLLOW_RANGE, 20.0D)	// zombies are 35, monster default is 16
-			.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.23F)	// zombies are 0.23F, players are 0.7F?
+			.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.3F)	// zombies are 0.23F, players are 0.7F?
 			.createMutableAttribute(ForgeMod.SWIM_SPEED.get(), 1.3F)
-			.createMutableAttribute(Attributes.ATTACK_DAMAGE, 3.0D);
+			.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D);
 	}
 
 	@Override
 	protected void registerGoals()
 	{
+		this.moveToWaterGoal = new MoveToWaterGoal(this, 1.2D);
 		this.goalSelector.addGoal(1, new SinkInWaterGoal(this)); // MOVE, JUMP
+		this.goalSelector.addGoal(2, this.moveToWaterGoal);	// MOVE
 		this.goalSelector.addGoal(2, new SwimToTargetGoal(this));	// JUMP
-		this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1D, false));	// MOVE, LOOK
-		this.goalSelector.addGoal(6, new MoveToWaterGoal(this, 1.2D));
+		this.goalSelector.addGoal(3, new PredicatedGoal<>(this,
+			new SwimGoal(this),
+			FroglinEntity::wantsToHunt));	// JUMP
+		this.goalSelector.addGoal(3, new PredicatedGoal<>(this,
+			new PanicGoal(this, 2D),
+			FroglinEntity::wantsToRunAway));	// MOVE
+		this.goalSelector.addGoal(4, new PredicatedGoal<>(this,
+			new LeapAtTargetGoal(this, 0.4F),
+			frog -> !frog.isInWater()));	// MOVE, JUMP
+		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1D, false));	// MOVE, LOOK
+		this.goalSelector.addGoal(6, new JumpSometimesGoal(this));	// JUMP
 		this.goalSelector.addGoal(7, new RandomWalkingGoal(this, 1D, 4)); // MOVE
 		this.goalSelector.addGoal(8, new LookAtGoal(this, PlayerEntity.class, 8.0F));	// LOOK
 		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));	// MOVE, LOOK
@@ -81,28 +101,30 @@ public class FroglinEntity extends MonsterEntity
 //		this.goalSelector.addGoal(3, new AvoidEntityGoal<>(this, CatEntity.class, 6.0F, 1.0D, 1.2D));
 		
 		// TODO set calls for help?
-		this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
+		this.targetSelector.addGoal(2, new PredicatedGoal<>(this,
+			new HurtByTargetGoal(this).setCallsForHelp(),
+			FroglinEntity::wantsToRetaliate));
 		this.targetSelector.addGoal(3, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, AbstractGroupFishEntity.class, true),
-			FroglinEntity::getWantsToHunt));
+			new NearestAttackableTargetGoal<>(this, AbstractGroupFishEntity.class, 10, false, false, null),
+			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(3, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, SquidEntity.class, true),
-			FroglinEntity::getWantsToHunt));
+			new NearestAttackableTargetGoal<>(this, SquidEntity.class, 10, false, false, null),
+			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(4, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, ChickenEntity.class, true),
-			FroglinEntity::getWantsToHunt));
+			new NearestAttackableTargetGoal<>(this, ChickenEntity.class, 20, false, false, null),
+			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(4, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, CowEntity.class, true),
-			FroglinEntity::getWantsToHunt));
+			new NearestAttackableTargetGoal<>(this, CowEntity.class, 20, false, false, null),
+			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(4, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, PigEntity.class, true),
-			FroglinEntity::getWantsToHunt));
+			new NearestAttackableTargetGoal<>(this, PigEntity.class, 20, false, false, null),
+			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(4, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, SheepEntity.class, true),
-			FroglinEntity::getWantsToHunt));
+			new NearestAttackableTargetGoal<>(this, SheepEntity.class, 20, false, false, null),
+			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(5, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, PlayerEntity.class, true),
-			FroglinEntity::getWantsToHunt));
+			new NearestAttackableTargetGoal<>(this, PlayerEntity.class, 100, false, false, null),
+			FroglinEntity::wantsToHunt));
 	}
 
 	@Override
@@ -173,9 +195,15 @@ public class FroglinEntity extends MonsterEntity
 
 
 	@Override
+	protected float getJumpUpwardsMotion()
+	{
+		return (1F + (float)this.rand.nextGaussian()*0.5F) * super.getJumpUpwardsMotion();
+	}
+
+	@Override
 	public float getBlockPathWeight(BlockPos pos, IWorldReader world)
 	{
-		return this.getWantsToHunt()
+		return this.wantsToHunt()
 			? this.getHuntingBlockPathWeight(pos, world)
 			: this.getHidingBlockPathWeight(pos, world);
 	}
@@ -224,9 +252,27 @@ public class FroglinEntity extends MonsterEntity
 		super.func_241847_a(world, killedEntity);
 		this.data.addFullness(Froglins.INSTANCE.serverConfig.froglinFullnessFromKill.get());
 	}
+
+	@Override
+	public int getMaxFallHeight()
+	{
+		return super.getMaxFallHeight()*2;
+	}
+
+	@Override
+	protected int calculateFallDamage(float distance, float damageMultiplier)
+	{
+		return super.calculateFallDamage(distance*0.4F, damageMultiplier);
+	}
+
+	// overriding because super.jump() is protected
+	@Override
+	public void jump()
+	{
+		super.jump();
+	}
 	
 	////// Syncing and Saving //////
-
 	@Override
 	public void writeAdditional(CompoundNBT compound)
 	{
@@ -274,10 +320,16 @@ public class FroglinEntity extends MonsterEntity
 	
 	public boolean wantsToHide()
 	{
-		return this.getAttackTarget() == null && !this.getWantsToHunt();
+		return (this.getAttackTarget() == null || this.wantsToRunAway()) && !this.wantsToHunt();
+	}
+	
+	public boolean wantsToRunAway()
+	{
+		return this.isLowLife()
+			&& !this.isInWater();
 	}
 
-	public boolean getWantsToHunt()
+	public boolean wantsToHunt()
 	{
 		// !world.isDayTime evaluates true when we are in a world with no daylight cycle
 		// world.isNightTime evaluates false in such worlds
@@ -291,6 +343,13 @@ public class FroglinEntity extends MonsterEntity
 			(this.world.isRaining() &&
 				this.world.getBiome(this.getPosition())
 				.getPrecipitation() == RainType.RAIN);
+	}
+	
+	public boolean wantsToRetaliate()
+	{
+		return !this.isLowLife()
+			|| !this.moveToWaterGoal.getIsRunning()
+			|| this.isInWater();
 	}
 	
 	public boolean isLowLife()
