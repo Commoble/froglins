@@ -9,6 +9,7 @@ import commoble.froglins.FroglinEntity;
 import net.minecraft.client.renderer.entity.model.BipedModel;
 import net.minecraft.client.renderer.model.ModelHelper;
 import net.minecraft.client.renderer.model.ModelRenderer;
+import net.minecraft.entity.Pose;
 import net.minecraft.util.HandSide;
 import net.minecraft.util.math.MathHelper;
 
@@ -126,17 +127,18 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 	// the base method sets rotation points to specific positions, which we don't want
 	// so we have to override the *entire method*
 	@Override
-	public void setRotationAngles(FroglinEntity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
+	public void setRotationAngles(FroglinEntity froglin, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		this.copyBaseBone(model -> model.bipedBody);
-		this.copyBaseBone(model -> model.bipedHead);
-		this.copyBaseBone(model -> model.bipedRightArm);
-		this.copyBaseBone(model -> model.bipedLeftArm);
-		this.copyBaseBone(model -> model.bipedRightLeg);
-		this.copyBaseBone(model -> model.bipedLeftLeg);
+		FroglinModel currentModel = froglin.getPose() == Pose.CROUCHING ? CROUCHED : BASE;
+		this.copyBaseBone(currentModel, model -> model.bipedBody);
+		this.copyBaseBone(currentModel, model -> model.bipedHead);
+		this.copyBaseBone(currentModel, model -> model.bipedRightArm);
+		this.copyBaseBone(currentModel, model -> model.bipedLeftArm);
+		this.copyBaseBone(currentModel, model -> model.bipedRightLeg);
+		this.copyBaseBone(currentModel, model -> model.bipedLeftLeg);
 		
-		boolean hasBeenGliding = entityIn.getTicksElytraFlying() > 4;
-		boolean isSwimming = entityIn.isActualySwimming();
+		boolean hasBeenGliding = froglin.getTicksElytraFlying() > 4;
+		boolean isSwimming = froglin.isActualySwimming();
 		this.bipedHead.rotateAngleY = netHeadYaw * ((float) Math.PI / 180F);
 		if (hasBeenGliding)
 		{
@@ -161,7 +163,7 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 		float glideFactor = 1.0F;
 		if (hasBeenGliding)
 		{
-			glideFactor = (float) entityIn.getMotion().lengthSquared();
+			glideFactor = (float) froglin.getMotion().lengthSquared();
 			glideFactor = glideFactor / 0.2F;
 			glideFactor = glideFactor * glideFactor * glideFactor;
 		}
@@ -201,7 +203,7 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 //			this.func_241655_c_(entityIn);
 //		}
 
-		this.func_230486_a_(entityIn, ageInTicks);
+		this.func_230486_a_(froglin, ageInTicks);
 //		if (this.isSneak)
 //		{
 //			this.bipedBody.rotateAngleX = 0.5F;
@@ -221,7 +223,7 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 		if (this.swimAnimation > 0.0F)
 		{
 			float limbSwingMod26 = limbSwing % 26.0F;
-			HandSide handside = this.getMainHand(entityIn);
+			HandSide handside = this.getMainHand(froglin);
 			float rightArmSwing = handside == HandSide.RIGHT && this.swingProgress > 0.0F ? 0.0F : this.swimAnimation;
 			float leftArmSwing = handside == HandSide.LEFT && this.swingProgress > 0.0F ? 0.0F : this.swimAnimation;
 			if (limbSwingMod26 < 14.0F)
@@ -314,9 +316,9 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 		modelRenderer.rotateAngleZ = z;
 	}
 	
-	public void copyBaseBone(Function<FroglinModel, ModelRenderer> getter)
+	public void copyBaseBone(FroglinModel modelToCopyFrom, Function<FroglinModel, ModelRenderer> getter)
 	{
-		getter.apply(this).copyModelAngles(getter.apply(CROUCHED));
+		getter.apply(this).copyModelAngles(getter.apply(modelToCopyFrom));
 	}
 
 	// private method from BipedModel

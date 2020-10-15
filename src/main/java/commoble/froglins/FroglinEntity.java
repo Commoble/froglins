@@ -1,7 +1,5 @@
 package commoble.froglins;
 
-import java.util.stream.Collectors;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -91,7 +89,10 @@ public class FroglinEntity extends MonsterEntity
 			new PanicGoal(this, 2D),
 			FroglinEntity::wantsToRunAway));	// MOVE
 		this.goalSelector.addGoal(4, new PredicatedGoal<>(this,
-			new LeapAtTargetGoal(this, 0.4F),
+			new LeapAtTargetGoal(this, 1.0F),
+			frog -> !frog.isInWater() && frog.getPose() == Pose.CROUCHING));
+		this.goalSelector.addGoal(4, new PredicatedGoal<>(this,
+			new LeapAtTargetGoal(this, 0.4F),	// value is y-power of jump
 			frog -> !frog.isInWater()));	// MOVE, JUMP
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1D, false));	// MOVE, LOOK
 		this.goalSelector.addGoal(6, new JumpSometimesGoal(this));	// JUMP
@@ -188,7 +189,9 @@ public class FroglinEntity extends MonsterEntity
 	@Override
 	protected float getJumpUpwardsMotion()
 	{
-		return (1F + (float)this.rand.nextGaussian()*0.5F) * super.getJumpUpwardsMotion();
+		return (1F + (float)this.rand.nextGaussian()*0.5F)
+			* (this.getPose() == Pose.CROUCHING ? 1.5F : 1F)
+			* super.getJumpUpwardsMotion();
 	}
 
 	@Override
@@ -219,11 +222,12 @@ public class FroglinEntity extends MonsterEntity
 			if (!this.dead) // make sure we only do these things if we didn't die during super.tick()
 			{
 				// slowly heal while in water
-				if (!this.dead && this.isInWater() && this.world.getRandom().nextInt() % 20 == 0)
+				if (this.isInWater() && this.world.getRandom().nextInt() % 20 == 0)
 				{
 					this.heal(1F);
 				}
 				
+				// handle fullness
 				if (this.data.getFullness() > 0)
 				{
 					this.data.decrementFullness();
@@ -232,7 +236,32 @@ public class FroglinEntity extends MonsterEntity
 				{
 					this.data.setFullness(0);
 				}
-				System.out.println(this.goalSelector.getRunningGoals().map(pgoal -> pgoal.getGoal()).collect(Collectors.toList()));
+				
+				// handle pose
+				if (this.isOnGround() && !this.isJumping && !this.moveController.isUpdating())
+				{
+					if (this.getRNG().nextInt(100) == 0)
+					{
+						this.setPose(Pose.CROUCHING);
+					}
+				}
+				else if (!this.isOnGround() || this.getRNG().nextInt(20) == 0)
+				{
+					this.setPose(Pose.STANDING);
+				}
+				else
+				{
+					LivingEntity target = this.getAttackTarget();
+					if (target != null)
+					{
+						double distSq = this.getDistanceSq(target);
+						double attackReachSq = this.getWidth() * 2.0F * target.getWidth() * 2.0F + target.getWidth();
+						if (distSq > attackReachSq && distSq < attackReachSq * attackReachSq && this.getRNG().nextInt(100) == 0)
+						{
+							this.setPose(Pose.CROUCHING);
+						}
+					}
+				}
 			}
 		}
 	}
@@ -243,6 +272,7 @@ public class FroglinEntity extends MonsterEntity
 	{
 		super.func_241847_a(world, killedEntity);
 		this.data.addFullness(Froglins.INSTANCE.serverConfig.froglinFullnessFromKill.get());
+		this.data.addEggs(1);
 	}
 
 	@Override
@@ -261,8 +291,6 @@ public class FroglinEntity extends MonsterEntity
 	public void jump()
 	{
 		super.jump();
-		Vector3d motion = this.getMotion();
-		this.setMotion(motion.x * 1.2F, motion.y, motion.z * 1.2F);
 	}
 	
 	////// Syncing and Saving //////
@@ -354,13 +382,19 @@ public class FroglinEntity extends MonsterEntity
 	{
 		return this.data.getFullness() <= 0;
 	}
+
+	public boolean laysPersistantEggs()
+	{
+		return Froglins.INSTANCE.serverConfig.persistantFroglinsLayPersistantFroglinEggs.get() && this.isNoDespawnRequired();
+	}
 	
 	public static class FroglinData
 	{
 		public static final FroglinData EMPTY = new FroglinData();
 		
 		public static final Codec<FroglinData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-					Codec.INT.optionalFieldOf("fullness", 0).forGetter(FroglinData::getFullness)
+					Codec.INT.optionalFieldOf("fullness", 0).forGetter(FroglinData::getFullness),
+					Codec.INT.optionalFieldOf("eggs", 0).forGetter(FroglinData::getEggs)
 				).apply(instance, FroglinData::new));
 		
 		private int fullness = 0;
@@ -369,14 +403,20 @@ public class FroglinEntity extends MonsterEntity
 		public void addFullness(int value) { this.fullness += value; }
 		public void decrementFullness() { --this.fullness; }
 		
+		private int eggs = 0;
+		public int getEggs() { return this.eggs; }
+		public void setEggs(int value) { this.eggs = value; }
+		public void addEggs(int value) { this.eggs += value; }
+		
 		public FroglinData()
 		{
-			this(0);
+			this(0,0);
 		}
 		
-		public FroglinData(int fullness)
+		public FroglinData(int fullness, int eggs)
 		{
 			this.fullness = fullness;
+			this.eggs = eggs;
 		}
 	}
 	
@@ -396,22 +436,41 @@ public class FroglinEntity extends MonsterEntity
 		public void tick()
 		{
 			LivingEntity target = this.froglin.getAttackTarget();
-			if (target != null && target.isInWater() && this.froglin.isInWater())
+			Vector3d velocity = this.froglin.getMotion();
+			if (target != null)
 			{
-				if (this.froglin.getNavigator().noPath())
+				if (this.froglin.isInWater())
 				{
-					this.froglin.setAIMoveSpeed(0.0F);
-					return;
-				}
+					if (target.isInWater())
+					{
+						if (this.froglin.getNavigator().noPath())
+						{
+							this.froglin.setAIMoveSpeed(0.0F);
+							return;
+						}
 
-				double dx = this.posX - this.froglin.getPosX();
-				double dy = this.posY - this.froglin.getPosY();
-				double dz = this.posZ - this.froglin.getPosZ();
-				double distance = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
-				dy = dy / distance;
-				float yawDegrees = (float) (MathHelper.atan2(dz, dx) * (180F / (float) Math.PI)) - 90.0F;
-				this.froglin.rotationYaw = this.limitAngle(this.froglin.rotationYaw, yawDegrees, 90.0F);
-				this.froglin.renderYawOffset = this.froglin.rotationYaw;
+						double dx = this.posX - this.froglin.getPosX();
+						double dy = this.posY - this.froglin.getPosY();
+						double dz = this.posZ - this.froglin.getPosZ();
+						double distance = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
+						dy = dy / distance;
+						float yawDegrees = (float) (MathHelper.atan2(dz, dx) * (180F / (float) Math.PI)) - 90.0F;
+						this.froglin.rotationYaw = this.limitAngle(this.froglin.rotationYaw, yawDegrees, 90.0F);
+						this.froglin.renderYawOffset = this.froglin.rotationYaw;
+					}
+				}
+				else if (!this.froglin.isOnGround())
+				{
+					if (velocity.x != 0.0D && velocity.z != 0.0D)
+					{
+						this.froglin.setMotion(velocity.x + 0.01D, velocity.y, velocity.z + 0.01D);
+					}
+					else
+					{
+						Vector3d offset = target.getPositionVec().subtract(this.froglin.getPositionVec()).normalize();
+						this.froglin.setMotion(velocity.x + 0.01D * offset.x, velocity.y, velocity.z + 0.01D * offset.z);
+					}
+				}
 			}
 			super.tick();
 

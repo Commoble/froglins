@@ -52,6 +52,8 @@ public class Froglins
 	// make so we have to make the froglin entity type before the egg item
 	public final EntityType<FroglinEntity> froglin = EntityType.Builder.create(FroglinEntity::new, EntityClassification.MONSTER)
 		.build(new ResourceLocation(MODID, Names.FROGLIN).toString());
+	
+	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
 
 	public Froglins() // invoked by forge due to @Mod
 	{
@@ -73,7 +75,7 @@ public class Froglins
 		DeferredRegister<PaintingType> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_TYPES);
 		
 		// register objects via deferred registers
-		RegistryObject<FroglinEggBlock> froglinEggBlock = blocks.register(Names.FROGLIN_EGG,
+		this.froglinEggBlock = blocks.register(Names.FROGLIN_EGG,
 			() -> new FroglinEggBlock(
 				AbstractBlock.Properties.create(Material.OCEAN_PLANT)
 					.notSolid()
@@ -83,7 +85,7 @@ public class Froglins
 					.sound(SoundType.SLIME)));
 		
 		items.register(Names.FROGLIN_EGG, () ->
-			new BlockItem(froglinEggBlock.get(), new Item.Properties().group(ItemGroup.DECORATIONS)));
+			new BlockItem(this.froglinEggBlock.get(), new Item.Properties().group(ItemGroup.DECORATIONS)));
 		
 		items.register(Names.FROGLIN_SPAWN_EGG, () ->
 			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().group(ItemGroup.MISC)));
