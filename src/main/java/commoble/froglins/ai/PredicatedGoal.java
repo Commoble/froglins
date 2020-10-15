@@ -80,4 +80,10 @@ public class PredicatedGoal<E extends LivingEntity> extends Goal
 	{
 		return this.delegate.getMutexFlags();
 	}
+
+	@Override
+	public String toString()
+	{
+		return String.format("%s(%s)", super.toString(), this.delegate.toString());
+	}
 }

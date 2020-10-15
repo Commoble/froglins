@@ -4,15 +4,20 @@ import java.util.function.BiConsumer;
 
 import commoble.froglins.client.ClientEvents;
 import commoble.froglins.util.ConfigHelper;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
 import net.minecraft.entity.item.PaintingType;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.SpawnEggItem;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ITag;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -20,6 +25,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -37,6 +43,8 @@ public class Froglins
 	public static Froglins INSTANCE;
 	
 	public static final ITag<Block> DIGGABLE_TAG = BlockTags.makeWrapperTag("froglins:diggable");
+	public static final ITag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
+	public static final ITag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
 	
 	public final ServerConfig serverConfig;
 	
@@ -60,12 +68,26 @@ public class Froglins
 		this.serverConfig = ConfigHelper.register(modContext, fmlContext, ModConfig.Type.SERVER, ServerConfig::new);
 		
 		// create and register deferred registers
+		DeferredRegister<Block> blocks = registerRegister(modBus, ForgeRegistries.BLOCKS);
 		DeferredRegister<Item> items = registerRegister(modBus, ForgeRegistries.ITEMS);
 		DeferredRegister<PaintingType> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_TYPES);
 		
 		// register objects via deferred registers
+		RegistryObject<FroglinEggBlock> froglinEggBlock = blocks.register(Names.FROGLIN_EGG,
+			() -> new FroglinEggBlock(
+				AbstractBlock.Properties.create(Material.OCEAN_PLANT)
+					.notSolid()
+					.doesNotBlockMovement()
+					.tickRandomly()
+					.zeroHardnessAndResistance()
+					.sound(SoundType.SLIME)));
+		
+		items.register(Names.FROGLIN_EGG, () ->
+			new BlockItem(froglinEggBlock.get(), new Item.Properties().group(ItemGroup.DECORATIONS)));
+		
 		items.register(Names.FROGLIN_SPAWN_EGG, () ->
 			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().group(ItemGroup.MISC)));
+		
 		paintings.register(Names.FROGLIN, () -> new PaintingType(32,32));
 		
 		// manually register entity types

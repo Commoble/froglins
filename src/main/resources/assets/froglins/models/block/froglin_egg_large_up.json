@@ -1,0 +1,23 @@
+{
+	"parent": "block/block",
+	"credit": "Made with Blockbench",
+	"textures": {
+		"particle": "froglins:block/froglin_egg",
+		"yolk": "froglins:block/froglin_egg",
+		"side": "froglins:block/froglin_egg_side"
+	},
+	"elements": [
+		{
+			"from": [5, 0, 5],
+			"to": [11, 6, 11],
+			"faces": {
+				"north": {"uv": [5, 0, 11, 6], "texture": "#side"},
+				"east": {"uv": [10, 5, 16, 11], "texture": "#side"},
+				"south": {"uv": [5, 10, 11, 16], "texture": "#side"},
+				"west": {"uv": [0, 5, 6, 11], "texture": "#side"},
+				"up": {"uv": [5, 5, 11, 11], "texture": "#yolk"},
+				"down": {"uv": [5, 5, 11, 11], "texture": "#side"}
+			}
+		}
+	]
+}

@@ -19,6 +19,7 @@ import net.minecraft.util.math.MathHelper;
 public class FroglinModel extends BipedModel<FroglinEntity>
 {
 	public static final FroglinModel BASE = new FroglinModel(0F);
+	public static final FroglinModel CROUCHED = new FroglinCrouchedModel(0f);
 	
 //	private final ModelRenderer headPivot;
 //	private final ModelRenderer bodyPivot;
@@ -315,7 +316,7 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 	
 	public void copyBaseBone(Function<FroglinModel, ModelRenderer> getter)
 	{
-		getter.apply(this).copyModelAngles(getter.apply(BASE));
+		getter.apply(this).copyModelAngles(getter.apply(CROUCHED));
 	}
 
 	// private method from BipedModel
@@ -323,4 +324,20 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 	{
 		return -65.0F * limbSwing + limbSwing * limbSwing;
 	}
+	
+	public static class FroglinCrouchedModel extends FroglinModel
+	{
+
+		public FroglinCrouchedModel(float scale)
+		{
+			super(scale);
+
+			this.bipedHead.setRotationPoint(0.0F, 10.0F, 0.0F);
+			this.bipedBody.setRotationPoint(0.0F, 12.0F, 0.0F);
+			this.bipedRightArm.setRotationPoint(-2.5F, 15.0F, 0.0F);
+			this.bipedLeftArm.setRotationPoint(2.5F, 15.0F, 0.0F);
+		}
+
+	}
+
 }

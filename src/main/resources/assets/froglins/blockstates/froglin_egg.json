@@ -1,0 +1,58 @@
+{
+	"variants": 
+	{
+		"": 
+		[
+			{
+				"model": "froglins:block/froglin_egg",
+				"weight": 10
+			},
+			{
+				"model": "froglins:block/froglin_egg",
+				"y": 90,
+				"weight": 10
+			},
+			{
+				"model": "froglins:block/froglin_egg",
+				"y": 180,
+				"weight": 10
+			},
+			{
+				"model": "froglins:block/froglin_egg",
+				"y": 270,
+				"weight": 10
+			},
+			{
+				"model": "froglins:block/froglin_egg_up",
+				"weight": 10
+			},
+			{
+				"model": "froglins:block/froglin_egg_large",
+				"weight": 4
+			},
+			{
+				"model": "froglins:block/froglin_egg_large",
+				"y": 90,
+				"weight": 4
+			},
+			{
+				"model": "froglins:block/froglin_egg_large",
+				"y": 180,
+				"weight": 4
+			},
+			{
+				"model": "froglins:block/froglin_egg_large",
+				"y": 270,
+				"weight": 4
+			},
+			{
+				"model": "froglins:block/froglin_egg_large_up",
+				"weight": 4
+			},
+			{
+				"model": "froglins:block/froglin_egg_many",
+				"weight": 10
+			}
+		]
+	}
+}
