@@ -20,17 +20,21 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.SpawnEggItem;
+import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.potion.Effect;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.EffectType;
 import net.minecraft.potion.Effects;
 import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionBrewing;
+import net.minecraft.potion.PotionUtils;
+import net.minecraft.potion.Potions;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ITag;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
@@ -40,9 +44,10 @@ import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.common.ForgeTagHandler;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.brewing.BrewingRecipe;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
+import net.minecraftforge.common.crafting.NBTIngredient;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -66,8 +71,6 @@ public class Froglins
 	public static Froglins INSTANCE;
 	
 	public static final ITag<Block> DIGGABLE_TAG = BlockTags.makeWrapperTag("froglins:diggable");
-	public static final ITag<Item> REDSTONE_DUST_TAG = ItemTags.makeWrapperTag("forge:dusts/redstone");
-	public static final ITag<Item> GLOWSTONE_DUST_TAG = ItemTags.makeWrapperTag("forge:dusts/glowstone");
 	public static final ITag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
 	public static final ITag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
 	
@@ -80,6 +83,8 @@ public class Froglins
 		.build(new ResourceLocation(MODID, Names.FROGLIN).toString());
 	
 	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
+	public final RegistryObject<Item> froglinEyeItem;
+	public final RegistryObject<BlockItem> froglinEggItem;
 	public final RegistryObject<HealthinessTonicItem> healthinessTonicItem;
 	public final RegistryObject<Potion> frogsMightPotion;
 	public final RegistryObject<Potion> longFrogsMightPotion;
@@ -123,13 +128,13 @@ public class Froglins
 		items.register(Names.FROGLIN_SPAWN_EGG, () ->
 			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().group(ItemGroup.MISC)));
 		
-		items.register(Names.FROGLIN_EGG, () ->
+		this.froglinEggItem = items.register(Names.FROGLIN_EGG, () ->
 			new BlockItem(this.froglinEggBlock.get(), new Item.Properties().group(ItemGroup.BREWING)));
 		
 		RegistryObject<HealthinessEffect> healthinessEffect = effects.register(Names.HEALTHINESS, () ->
 			new HealthinessEffect(EffectType.BENEFICIAL, 0x032f00));
 		
-		items.register(Names.FROGLIN_EYE, () ->
+		this.froglinEyeItem = items.register(Names.FROGLIN_EYE, () ->
 			new Item(
 				new Item.Properties()
 					.group(ItemGroup.BREWING)
@@ -147,7 +152,7 @@ public class Froglins
 					.maxStackSize(3)
 					.food(
 						new Food.Builder()
-							.effect(() -> new EffectInstance(healthinessEffect.get()), 1F)
+							.effect(() -> new EffectInstance(healthinessEffect.get(), 1), 1F)
 							.setAlwaysEdible()
 							.build()
 							)));
@@ -222,35 +227,18 @@ public class Froglins
 	{
 		GlobalEntityTypeAttributes.put(this.froglin, FroglinEntity.createAttributes().create());
 		EntitySpawnPlacementRegistry.register(this.froglin, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, FroglinEntity::canRandomlySpawn);
-		BrewingRecipeRegistry.addRecipe(new PotionToItemRecipe(
+		
+		BrewingRecipeRegistry.addRecipe(potionToItemRecipe(
 			Items.POTION,
-			potionTag("froglins:healthiness_bases"),
-			itemTag("froglins:healthiness_catalysts"),
+			Potions.AWKWARD,
+			this.froglinEyeItem.get(),
 			this.healthinessTonicItem.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(
-			potionTag("froglins:frogs_might_bases"),
-			itemTag("froglins:frogs_might_catalysts"),
-			this.frogsMightPotion.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(
-			potionTag("froglins:frogs_might"),
-			REDSTONE_DUST_TAG,
-			this.longFrogsMightPotion.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(
-			potionTag("froglins:frogs_might"),
-			GLOWSTONE_DUST_TAG,
-			this.longFrogsMightPotion.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(
-			potionTag("froglins:frog_champion_bases"),
-			itemTag("froglins:frog_champion_catalysts"),
-			this.frogChampionPotion.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(
-			potionTag("froglins:frog_champion"),
-			REDSTONE_DUST_TAG,
-			this.longFrogChampionPotion.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(
-			potionTag("froglins:frog_champion"),
-			GLOWSTONE_DUST_TAG,
-			this.longFrogChampionPotion.get()));
+		PotionBrewing.addMix(Potions.AWKWARD, this.froglinEggItem.get(), this.frogsMightPotion.get());
+		PotionBrewing.addMix(this.frogsMightPotion.get(), Items.REDSTONE, this.longFrogsMightPotion.get());
+		PotionBrewing.addMix(this.frogsMightPotion.get(), Items.GLOWSTONE_DUST, this.strongFrogsMightPotion.get());
+		PotionBrewing.addMix(Potions.STRONG_LEAPING, this.froglinEggItem.get(), this.frogChampionPotion.get());
+		PotionBrewing.addMix(this.frogChampionPotion.get(), Items.REDSTONE, this.longFrogChampionPotion.get());
+		PotionBrewing.addMix(this.frogsMightPotion.get(), Items.GLOWSTONE_DUST, this.strongFrogChampionPotion.get());
 	}
 	
 	public void addThingsToBiomeOnBiomeLoad(BiomeLoadingEvent event)
@@ -297,13 +285,11 @@ public class Froglins
 		return register;
 	}
 	
-	public static ITag<Item> itemTag(String id)
+	public static BrewingRecipe potionToItemRecipe(Item inputPotionItem, Potion inputPotion, Item catalyst, Item output)
 	{
-		return ItemTags.createOptional(new ResourceLocation(id));
-	}
-	
-	public static ITag<Potion> potionTag(String id)
-	{
-		return ForgeTagHandler.createOptionalTag(ForgeRegistries.POTION_TYPES, new ResourceLocation(id));
+		Ingredient inputPotionIngredient = NBTIngredient.fromStacks(PotionUtils.addPotionToItemStack(new ItemStack(inputPotionItem), inputPotion));
+		Ingredient catalystIngredient = Ingredient.fromItems(catalyst);
+		ItemStack result = new ItemStack(output);
+		return new BrewingRecipe(inputPotionIngredient, catalystIngredient, result);
 	}
 }

@@ -16,6 +16,9 @@ public class HealthinessEffect extends InstantEffect
 		super(type, liquidColor);
 	}
 
+	// this is called every tick
+	// for instant effects from food items,
+	// the effect instance must be added to the food item with a duration of exactly 1 tick
 	@Override
 	public void performEffect(LivingEntity entity, int amplifier)
 	{
