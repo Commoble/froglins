@@ -1,9 +1,12 @@
 package commoble.froglins;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.EffectType;
 import net.minecraft.potion.Effects;
 import net.minecraft.potion.InstantEffect;
+import net.minecraft.util.FoodStats;
+import net.minecraft.util.math.MathHelper;
 
 public class HealthinessEffect extends InstantEffect
 {
@@ -26,6 +29,18 @@ public class HealthinessEffect extends InstantEffect
 				entity.removePotionEffect(Effects.BLINDNESS);
 				entity.removePotionEffect(Effects.NAUSEA);
 				entity.removePotionEffect(Effects.POISON);
+				
+				if (entity instanceof PlayerEntity)
+				{
+					PlayerEntity player = (PlayerEntity)entity;
+					FoodStats foodStats = player.getFoodStats();
+					
+					int currentFood = foodStats.getFoodLevel();
+					int maxFood = 20;
+					double missingFood = maxFood - currentFood;
+					int foodRestored = MathHelper.floor(Math.sqrt(missingFood));
+					foodStats.addStats(foodRestored, (foodRestored/2) * 0.1F);
+				}
 			}
 		}
 	}
