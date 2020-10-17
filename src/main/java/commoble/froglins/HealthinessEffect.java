@@ -32,6 +32,7 @@ public class HealthinessEffect extends InstantEffect
 				entity.removePotionEffect(Effects.BLINDNESS);
 				entity.removePotionEffect(Effects.NAUSEA);
 				entity.removePotionEffect(Effects.POISON);
+				entity.removePotionEffect(Effects.HUNGER);
 				
 				if (entity instanceof PlayerEntity)
 				{

@@ -149,7 +149,8 @@ public class Froglins
 			new HealthinessTonicItem(
 				new Item.Properties()
 					.group(ItemGroup.BREWING)
-					.maxStackSize(3)
+					.maxStackSize(1)
+					.containerItem(Items.GLASS_BOTTLE)
 					.food(
 						new Food.Builder()
 							.effect(() -> new EffectInstance(healthinessEffect.get(), 1), 1F)

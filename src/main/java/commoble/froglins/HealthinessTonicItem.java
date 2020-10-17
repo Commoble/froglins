@@ -3,6 +3,8 @@ package commoble.froglins;
 import java.util.List;
 
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.UseAction;
@@ -31,6 +33,28 @@ public class HealthinessTonicItem extends Item
 	}
 
 	@Override
+	public ItemStack onItemUseFinish(ItemStack stack, World world, LivingEntity entity)
+	{
+		super.onItemUseFinish(stack, world, entity);
+		PlayerEntity player = entity instanceof PlayerEntity ? (PlayerEntity) entity : null;
+		
+		if (player == null || !player.abilities.isCreativeMode)
+		{
+			if (stack.isEmpty())
+			{
+				return this.getContainerItem(stack);
+			}
+
+			if (player != null)
+			{
+				player.inventory.addItemStackToInventory(this.getContainerItem(stack));
+			}
+		}
+
+		return stack;
+	}
+
+	@Override
 	@OnlyIn(Dist.CLIENT)
 	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn)
 	{
@@ -39,6 +63,5 @@ public class HealthinessTonicItem extends Item
 		tooltip.add(TOOLTIP_1);
 		tooltip.add(TOOLTIP_2);
 	}
-	
 
 }
