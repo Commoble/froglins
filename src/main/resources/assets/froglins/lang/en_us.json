@@ -1,8 +1,15 @@
 {
 	"block.froglins.froglin_egg": "Froglin Egg",
 	"item.froglins.froglin_spawn_egg": "Froglin Spawn Egg",
+	"item.froglins.froglin_eye": "Froglin Eye",
+	"item.froglins.healthiness_tonic": "Healthiness Tonic",
+	"item.minecraft.potion.effect.froglins.frog_champion": "Potion of the Frog Champion",
+	"item.minecraft.splash_potion.effect.froglins.frog_champion": "Splash Potion of the Frog Champion",
+	"item.minecraft.lingering_potion.effect.froglins.frog_champion": "Lingering Potion of the Frog Champion",
+	"item.minecraft.tipped_arrow.effect.froglins.frog_champion": "Arrow of the Frog Champion",
+	"effect.froglins.frogs_might": "Frog's Might",
+	"entity.froglins.froglin": "Froglin",
 	"tooltip.froglins.tonic_of_healthiness_0": "Blindness, nausea, starved?",
-	"tooltip.froglins.tonic_of_healthiness_1": "Spider bite or mostly dead?",
-	"tooltip.froglins.tonic_of_healthiness_2": "Drink this jar of frog",
-	"entity.froglins.froglin": "Froglin"
+	"tooltip.froglins.tonic_of_healthiness_1": "Spider bites or mortal wounds?",
+	"tooltip.froglins.tonic_of_healthiness_2": "Drink this jar of frog"
 }

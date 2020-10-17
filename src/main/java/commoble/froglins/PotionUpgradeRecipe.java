@@ -36,7 +36,7 @@ public class PotionUpgradeRecipe implements IBrewingRecipe
 	public ItemStack getOutput(ItemStack input, ItemStack ingredient)
 	{
 		return this.isInput(input) && this.isIngredient(ingredient)
-			? PotionUtils.addPotionToItemStack(input, this.output)
+			? PotionUtils.addPotionToItemStack(input.copy(), this.output)
 			: ItemStack.EMPTY;
 	}
 

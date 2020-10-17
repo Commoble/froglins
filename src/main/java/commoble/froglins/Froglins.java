@@ -69,9 +69,9 @@ public class Froglins
 	public static final ITag<Item> REDSTONE_DUST_TAG = ItemTags.makeWrapperTag("forge:dusts/redstone");
 	public static final ITag<Item> GLOWSTONE_DUST_TAG = ItemTags.makeWrapperTag("forge:dusts/glowstone");
 	public static final ITag<Item> HEALTHINESS_INGREDIENT_TAG = ItemTags.makeWrapperTag("froglins:healthiness_ingredients");
-	public static final ITag<Item> FROG_MASTER_INGREDIENT_TAG = ItemTags.makeWrapperTag("froglins:frog_master_ingredients");
+	public static final ITag<Item> FROG_CHAMPION_INGREDIENT_TAG = ItemTags.makeWrapperTag("froglins:frog_champion_ingredients");
 	public static final ITag<Potion> AWKWARD_POTION_TAG = ForgeTagHandler.createOptionalTag(ForgeRegistries.POTION_TYPES, new ResourceLocation("forge", "awkward"));
-	public static final ITag<Potion> FROG_MASTER_POTION_TAG = ForgeTagHandler.createOptionalTag(ForgeRegistries.POTION_TYPES, new ResourceLocation(MODID, Names.FROG_MASTER));
+	public static final ITag<Potion> FROG_CHAMPION_POTION_TAG = ForgeTagHandler.createOptionalTag(ForgeRegistries.POTION_TYPES, new ResourceLocation(MODID, Names.FROG_CHAMPION));
 	public static final ITag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
 	public static final ITag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
 	
@@ -84,10 +84,10 @@ public class Froglins
 		.build(new ResourceLocation(MODID, Names.FROGLIN).toString());
 	
 	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
-	public final RegistryObject<HealthinessTonicItem> tonicOfHealthinessItem;
-	public final RegistryObject<Potion> frogMasterPotion;
-	public final RegistryObject<Potion> longFrogMasterPotion;
-	public final RegistryObject<Potion> strongFrogMasterPotion;
+	public final RegistryObject<HealthinessTonicItem> healthinessTonicItem;
+	public final RegistryObject<Potion> frogChampionPotion;
+	public final RegistryObject<Potion> longFrogChampionPotion;
+	public final RegistryObject<Potion> strongFrogChampionPotion;
 
 	public Froglins() // invoked by forge due to @Mod
 	{
@@ -128,7 +128,7 @@ public class Froglins
 			new BlockItem(this.froglinEggBlock.get(), new Item.Properties().group(ItemGroup.BREWING)));
 		
 		RegistryObject<HealthinessEffect> healthinessEffect = effects.register(Names.HEALTHINESS, () ->
-			new HealthinessEffect(EffectType.BENEFICIAL, 0xd4f6bc));
+			new HealthinessEffect(EffectType.BENEFICIAL, 0x032f00));
 		
 		items.register(Names.FROGLIN_EYE, () ->
 			new Item(
@@ -141,7 +141,7 @@ public class Froglins
 						.build()
 						)));
 		
-		this.tonicOfHealthinessItem = items.register(Names.TONIC_OF_HEALTHINESS, () ->
+		this.healthinessTonicItem = items.register(Names.HEALTHINESS_TONIC, () ->
 			new HealthinessTonicItem(
 				new Item.Properties()
 					.group(ItemGroup.BREWING)
@@ -151,26 +151,29 @@ public class Froglins
 							.effect(() -> new EffectInstance(healthinessEffect.get()), 1F)
 							.setAlwaysEdible()
 							.hunger(6)
-							.saturation(0.6F)
+							.saturation(0.2F)
 							.build()
 							)));
 		
-		RegistryObject<Effect> frogsGraceEffect = effects.register(Names.FROGS_GRACE, () ->
-			new PublicEffect(EffectType.BENEFICIAL, 0x032f00)
+		RegistryObject<Effect> frogsMightEffect = effects.register(Names.FROGS_GRACE, () ->
+			new PublicEffect(EffectType.BENEFICIAL, 0xd4f6bc)
 				.addAttributesModifier(ForgeMod.SWIM_SPEED.get(), "1c2a2b4d-7c8e-473c-a6c3-d68af3d47704", 0.4F, AttributeModifier.Operation.MULTIPLY_TOTAL));
 		
-		this.frogMasterPotion = potions.register(Names.FROG_MASTER, () ->
-			new Potion(Names.FROG_MASTER,
+		// name args in Potion constructor is used for translation key
+		// convention is to use the same name for normal/long/strong potions
+		String frogChampionTranslationKey = makePotionTranslationKey(Names.FROG_CHAMPION);
+		this.frogChampionPotion = potions.register(Names.FROG_CHAMPION, () ->
+			new Potion(frogChampionTranslationKey,
 				new EffectInstance(Effects.JUMP_BOOST, 2400),
-				new EffectInstance(frogsGraceEffect.get(), 2400)));
-		this.longFrogMasterPotion = potions.register(Names.LONG_FROG_MASTER, () ->
-			new Potion(Names.LONG_FROG_MASTER,
+				new EffectInstance(frogsMightEffect.get(), 2400)));
+		this.longFrogChampionPotion = potions.register(Names.LONG_FROG_CHAMPION, () ->
+			new Potion(frogChampionTranslationKey,
 				new EffectInstance(Effects.JUMP_BOOST, 6400),
-				new EffectInstance(frogsGraceEffect.get(), 6400)));
-		this.strongFrogMasterPotion = potions.register(Names.STRONG_FROG_MASTER, () ->
-			new Potion(Names.STRONG_FROG_MASTER,
+				new EffectInstance(frogsMightEffect.get(), 6400)));
+		this.strongFrogChampionPotion = potions.register(Names.STRONG_FROG_CHAMPION, () ->
+			new Potion(frogChampionTranslationKey,
 				new EffectInstance(Effects.JUMP_BOOST, 1200, 1),
-				new EffectInstance(frogsGraceEffect.get(), 1200, 1)));
+				new EffectInstance(frogsMightEffect.get(), 1200, 1)));
 		
 		paintings.register(Names.FROGLIN, () -> new PaintingType(32,32));
 		
@@ -187,6 +190,11 @@ public class Froglins
 		{
 			ClientEvents.subscribeClientEvents(modBus, forgeBus);
 		}
+	}
+	
+	public static String makePotionTranslationKey(String potionName)
+	{
+		return MODID + "." + potionName;
 	}
 	
 	public void onRegisterEntityTypes(RegistryEvent.Register<EntityType<?>> event)
@@ -206,10 +214,10 @@ public class Froglins
 	{
 		GlobalEntityTypeAttributes.put(this.froglin, FroglinEntity.createAttributes().create());
 		EntitySpawnPlacementRegistry.register(this.froglin, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, FroglinEntity::canRandomlySpawn);
-		BrewingRecipeRegistry.addRecipe(new PotionToItemRecipe(Items.POTION, AWKWARD_POTION_TAG, HEALTHINESS_INGREDIENT_TAG, this.tonicOfHealthinessItem.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(AWKWARD_POTION_TAG, FROG_MASTER_INGREDIENT_TAG, this.frogMasterPotion.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(FROG_MASTER_POTION_TAG, REDSTONE_DUST_TAG, this.longFrogMasterPotion.get()));
-		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(FROG_MASTER_POTION_TAG, GLOWSTONE_DUST_TAG, this.strongFrogMasterPotion.get()));
+		BrewingRecipeRegistry.addRecipe(new PotionToItemRecipe(Items.POTION, AWKWARD_POTION_TAG, HEALTHINESS_INGREDIENT_TAG, this.healthinessTonicItem.get()));
+		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(AWKWARD_POTION_TAG, FROG_CHAMPION_INGREDIENT_TAG, this.frogChampionPotion.get()));
+		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(FROG_CHAMPION_POTION_TAG, REDSTONE_DUST_TAG, this.longFrogChampionPotion.get()));
+		BrewingRecipeRegistry.addRecipe(new PotionUpgradeRecipe(FROG_CHAMPION_POTION_TAG, GLOWSTONE_DUST_TAG, this.strongFrogChampionPotion.get()));
 	}
 	
 	public void addThingsToBiomeOnBiomeLoad(BiomeLoadingEvent event)
