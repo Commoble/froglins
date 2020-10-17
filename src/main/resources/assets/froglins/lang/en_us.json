@@ -1,5 +1,8 @@
 {
 	"block.froglins.froglin_egg": "Froglin Egg",
 	"item.froglins.froglin_spawn_egg": "Froglin Spawn Egg",
+	"tooltip.froglins.tonic_of_healthiness_0": "Blindness, nausea, starved?",
+	"tooltip.froglins.tonic_of_healthiness_1": "Spider bite or mostly dead?",
+	"tooltip.froglins.tonic_of_healthiness_2": "Drink this jar of frog",
 	"entity.froglins.froglin": "Froglin"
 }

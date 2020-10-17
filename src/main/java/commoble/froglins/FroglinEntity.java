@@ -1,5 +1,7 @@
 package commoble.froglins;
 
+import java.util.Random;
+
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -15,6 +17,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.Pose;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.controller.MovementController;
@@ -38,6 +41,8 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.Difficulty;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome.RainType;
@@ -71,6 +76,13 @@ public class FroglinEntity extends MonsterEntity
 			.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.3F)	// zombies are 0.23F, players are 0.7F?
 			.createMutableAttribute(ForgeMod.SWIM_SPEED.get(), 1.5F)
 			.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D);
+	}
+	
+	public static boolean canRandomlySpawn(EntityType<FroglinEntity> type, IServerWorld world, SpawnReason reason, BlockPos pos, Random rand)
+	{
+		return world.getDifficulty() != Difficulty.PEACEFUL
+			&& MonsterEntity.isValidLightLevel(world, pos, rand)
+			&& (reason == SpawnReason.SPAWNER || world.getBlockState(pos).getFluidState().isTagged(FluidTags.WATER));
 	}
 
 	@Override
@@ -174,6 +186,15 @@ public class FroglinEntity extends MonsterEntity
 	public boolean canBreatheUnderwater()
 	{
 		return true;
+	}
+
+	// called during random spawn attempts, after the entity instance is created, but before it is canonically added to the world
+	// normally this returns false if the entity is in water, or if the entity is touching another entity
+	// water mobs must override this to skip the water check
+	@Override
+	public boolean isNotColliding(IWorldReader worldIn)
+	{
+		return worldIn.checkNoEntityCollision(this);
 	}
 
 	// affects how fast you stop moving after you stop moving (lower numbers = stop moving sooner)
