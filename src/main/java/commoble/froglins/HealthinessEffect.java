@@ -43,7 +43,7 @@ public class HealthinessEffect extends InstantEffect
 					int maxFood = 20;
 					double missingFood = maxFood - currentFood;
 					int foodRestored = MathHelper.floor(Math.sqrt(missingFood));
-					foodStats.addStats(foodRestored, 0.1F);
+					foodStats.addStats(foodRestored, 0.0F);
 				}
 			}
 		}
