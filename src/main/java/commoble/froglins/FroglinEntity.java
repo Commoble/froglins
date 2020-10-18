@@ -80,7 +80,10 @@ public class FroglinEntity extends MonsterEntity
 	
 	public static boolean canRandomlySpawn(EntityType<FroglinEntity> type, IServerWorld world, SpawnReason reason, BlockPos pos, Random rand)
 	{
+		int minY = world.getSeaLevel() - 5;
+		int y = pos.getY();
 		return world.getDifficulty() != Difficulty.PEACEFUL
+			&& y >= minY
 			&& MonsterEntity.isValidLightLevel(world, pos, rand)
 			&& (reason == SpawnReason.SPAWNER || world.getBlockState(pos).getFluidState().isTagged(FluidTags.WATER));
 	}

@@ -1,9 +1,13 @@
 package commoble.froglins;
 
-import java.util.Set;
+import java.util.List;
 import java.util.function.BiConsumer;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import commoble.froglins.client.ClientEvents;
+import commoble.froglins.data.FroglinSpawnEntry;
 import commoble.froglins.util.ConfigHelper;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -42,7 +46,6 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.MobSpawnInfo.Spawners;
 import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.brewing.BrewingRecipe;
@@ -70,6 +73,8 @@ public class Froglins
 	public static final String MODID = "froglins"; // use this same string everywhere you need a modid	
 	public static Froglins INSTANCE;
 	
+	public static final Logger LOGGER = LogManager.getLogger();
+	
 	public static final ITag<Block> DIGGABLE_TAG = BlockTags.makeWrapperTag("froglins:diggable");
 	public static final ITag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
 	public static final ITag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
@@ -92,7 +97,7 @@ public class Froglins
 	public final RegistryObject<Potion> frogChampionPotion;
 	public final RegistryObject<Potion> longFrogChampionPotion;
 	public final RegistryObject<Potion> strongFrogChampionPotion;
-
+	
 	public Froglins() // invoked by forge due to @Mod
 	{
 		INSTANCE = this;
@@ -245,26 +250,32 @@ public class Froglins
 	public void addThingsToBiomeOnBiomeLoad(BiomeLoadingEvent event)
 	{
 		RegistryKey<Biome> key = RegistryKey.getOrCreateKey(Registry.BIOME_KEY, event.getName());
+		List<Spawners> spawners = event.getSpawns().getSpawner(EntityClassification.MONSTER);
 		
-		Set<BiomeDictionary.Type> types = BiomeDictionary.getTypes(key);
-		
-		// avoid cold, dry, or ocean biomes
-		if (!types.contains(BiomeDictionary.Type.COLD) && !types.contains(BiomeDictionary.Type.OCEAN) && !types.contains(BiomeDictionary.Type.DRY))
+		for (FroglinSpawnEntry entry : this.commonConfig.spawns.get())
 		{
-			// only spawn in overworld for now
-			if (types.contains(BiomeDictionary.Type.OVERWORLD))
-			{
-				int weight =
-					types.contains(BiomeDictionary.Type.SWAMP) ? 50
-						: types.contains(BiomeDictionary.Type.RIVER) ? 15
-						: types.contains(BiomeDictionary.Type.WET) ? 50
-						: 5;
-
-				event.getSpawns()
-					.getSpawner(EntityClassification.MONSTER)
-					.add(new Spawners(this.froglin, weight, 1, 4));
-			}
+			entry.addToBiomeIfPermitted(key, spawners);
 		}
+		
+//		Set<BiomeDictionary.Type> types = BiomeDictionary.getTypes(key);
+//		
+//		// avoid cold, dry, or ocean biomes
+//		if (!types.contains(BiomeDictionary.Type.COLD) && !types.contains(BiomeDictionary.Type.OCEAN) && !types.contains(BiomeDictionary.Type.DRY))
+//		{
+//			// only spawn in overworld for now
+//			if (types.contains(BiomeDictionary.Type.OVERWORLD))
+//			{
+//				int weight =
+//					types.contains(BiomeDictionary.Type.SWAMP) ? 50
+//						: types.contains(BiomeDictionary.Type.RIVER) ? 15
+//						: types.contains(BiomeDictionary.Type.WET) ? 50
+//						: 5;
+//
+//				event.getSpawns()
+//					.getSpawner(EntityClassification.MONSTER)
+//					.add(new Spawners(this.froglin, weight, 1, 4));
+//			}
+//		}
 	}
 	
 	public static <T extends IForgeRegistryEntry<T>> BiConsumer<String,T> getRegistrator(IForgeRegistry<T> registry)
