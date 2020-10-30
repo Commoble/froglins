@@ -15,5 +15,15 @@
 	"entity.froglins.froglin": "Froglin",
 	"tooltip.froglins.tonic_of_healthiness_0": "Blindness, nausea, starved?",
 	"tooltip.froglins.tonic_of_healthiness_1": "Spider bites or mortal wounds?",
-	"tooltip.froglins.tonic_of_healthiness_2": "Drink this jar of frog"
+	"tooltip.froglins.tonic_of_healthiness_2": "Drink this jar of frog",
+	"froglins.advancements.adventure.froglin_hunter.title": "Froglin Hunter",
+	"froglins.advancements.adventure.froglin_hunter.description": "Slay a Froglin",
+	"froglins.advancements.husbandry.froglin_rancher.title": "Froglin Rancher",
+	"froglins.advancements.husbandry.froglin_rancher.description": "Find a Froglin Egg",
+	"froglins.advancements.nether.brew_tonic.title": "Eye of Frog and Toe of Frog",
+	"froglins.advancements.nether.brew_tonic.description": "Brew a Healthiness Tonic from a Froglin Eye",
+	"froglins.advancements.nether.brew_frogs_might.title": "Frog's Might",
+	"froglins.advancements.nether.brew_frogs_might.description": "Brew a Potion of Frog's Might from a Froglin Egg",
+	"froglins.advancements.nether.brew_frog_champion.title": "Frog Champion",
+	"froglins.advancements.nether.brew_frog_champion.description": "Upgrade a Strong Potion of Leaping to a Potion of the Frog Champion with a Froglin Egg"
 }

@@ -1,0 +1,38 @@
+{
+	"parent": "minecraft:nether/brew_potion",
+	"display": 
+	{
+		"icon": 
+		{
+			"item": "froglins:healthiness_tonic"
+		},
+		"title": 
+		{
+			"translate": "froglins.advancements.nether.brew_tonic.title"
+		},
+		"description": 
+		{
+			"translate": "froglins.advancements.nether.brew_tonic.description"
+		},
+		"frame": "goal",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": 
+	{
+		"brew_tonic": 
+		{
+			"trigger": "minecraft:inventory_changed",
+			"conditions": 
+			{
+				"items": 
+				[
+					{
+						"item": "froglins:healthiness_tonic"
+					}
+				]
+			}
+		}
+	}
+}
