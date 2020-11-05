@@ -62,7 +62,10 @@ public class FroglinEggBlock extends Block implements IBucketPickupHandler, ILiq
 	{
 		BlockPos placePos = context.getPos();
 		FluidState fluidState = context.getWorld().getFluidState(placePos);
-		BlockState stateToPlace = super.getStateForPlacement(context).with(WATERLOGGED, fluidState.getFluid() == Fluids.WATER);
+		BlockState stateToPlace = super.getStateForPlacement(context)
+			.with(WATERLOGGED, fluidState.getFluid() == Fluids.WATER)
+			.with(PERSISTANT, Froglins.INSTANCE.serverConfig.playersPlacePersistantFroglinEggs.get());
+		
 		if (this.isValidPosition(stateToPlace, context.getWorld(), placePos))
 		{
 			return stateToPlace;
