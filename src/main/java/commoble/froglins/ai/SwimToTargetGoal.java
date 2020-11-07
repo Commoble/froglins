@@ -27,15 +27,14 @@ public class SwimToTargetGoal extends SwimGoal
 	{
 		LivingEntity target = this.froglin.getAttackTarget();
 		return target != null
-			&& this.froglin.isInWater()
-			&& target.isInWater();
+			&& this.froglin.isInWater();
 	}
 
 	@Override
 	public void tick()
 	{
 		LivingEntity target = this.froglin.getAttackTarget();
-		if (target != null && this.froglin.getPosY() < target.getPosY() && this.froglin.getRNG().nextFloat() < 0.8F)
+		if (target != null && (!target.isInWater() || this.froglin.getPosY() < target.getPosY()) && this.froglin.getRNG().nextFloat() < 0.8F)
 		{
 			this.froglin.getJumpController().setJumping();
 		}
