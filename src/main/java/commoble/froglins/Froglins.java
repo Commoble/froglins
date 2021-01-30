@@ -11,15 +11,20 @@ import commoble.froglins.data.FroglinSpawnEntry;
 import commoble.froglins.util.ConfigHelper;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.DispenserBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.dispenser.DefaultDispenseItemBehavior;
+import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntitySpawnPlacementRegistry;
 import net.minecraft.entity.EntitySpawnPlacementRegistry.PlacementType;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
 import net.minecraft.entity.item.PaintingType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
@@ -39,6 +44,7 @@ import net.minecraft.potion.Potions;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.ITag;
+import net.minecraft.util.Direction;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
@@ -88,6 +94,7 @@ public class Froglins
 		.build(new ResourceLocation(MODID, Names.FROGLIN).toString());
 	
 	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
+	public final RegistryObject<SpawnEggItem> froglinSpawnEggItem;
 	public final RegistryObject<Item> froglinEyeItem;
 	public final RegistryObject<BlockItem> froglinEggItem;
 	public final RegistryObject<HealthinessTonicItem> healthinessTonicItem;
@@ -130,7 +137,7 @@ public class Froglins
 					.zeroHardnessAndResistance()
 					.sound(SoundType.SLIME)));
 		
-		items.register(Names.FROGLIN_SPAWN_EGG, () ->
+		this.froglinSpawnEggItem = items.register(Names.FROGLIN_SPAWN_EGG, () ->
 			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().group(ItemGroup.MISC)));
 		
 		this.froglinEggItem = items.register(Names.FROGLIN_EGG, () ->
@@ -233,6 +240,25 @@ public class Froglins
 	{
 		GlobalEntityTypeAttributes.put(this.froglin, FroglinEntity.createAttributes().create());
 		EntitySpawnPlacementRegistry.register(this.froglin, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, FroglinEntity::canRandomlySpawn);
+		
+		// add spawn egg behaviours to dispenser
+		DefaultDispenseItemBehavior spawnEggBehavior = new DefaultDispenseItemBehavior()
+		{
+			/**
+			 * Dispense the specified stack, play the dispense sound and spawn particles.
+			 */
+			@Override
+			public ItemStack dispenseStack(IBlockSource source, ItemStack stack)
+			{
+				Direction direction = source.getBlockState().get(DispenserBlock.FACING);
+				EntityType<?> entitytype = ((SpawnEggItem) stack.getItem()).getType(stack.getTag());
+				entitytype.spawn(source.getWorld(), stack, (PlayerEntity) null, source.getBlockPos().offset(direction), SpawnReason.DISPENSER, direction != Direction.UP, false);
+				stack.shrink(1);
+				return stack;
+			}
+		};
+		
+		DispenserBlock.registerDispenseBehavior(this.froglinSpawnEggItem.get(), spawnEggBehavior);
 		
 		BrewingRecipeRegistry.addRecipe(potionToItemRecipe(
 			Items.POTION,
