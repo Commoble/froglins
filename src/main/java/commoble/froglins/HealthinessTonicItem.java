@@ -15,11 +15,13 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import net.minecraft.item.Item.Properties;
+
 public class HealthinessTonicItem extends Item
 {
-	public static final ITextComponent TOOLTIP_0 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_0").modifyStyle(s -> s.applyFormatting(TextFormatting.GRAY));
-	public static final ITextComponent TOOLTIP_1 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_1").modifyStyle(s -> s.applyFormatting(TextFormatting.GRAY));
-	public static final ITextComponent TOOLTIP_2 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_2").modifyStyle(s -> s.applyFormatting(TextFormatting.GRAY));
+	public static final ITextComponent TOOLTIP_0 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_0").withStyle(s -> s.applyFormat(TextFormatting.GRAY));
+	public static final ITextComponent TOOLTIP_1 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_1").withStyle(s -> s.applyFormat(TextFormatting.GRAY));
+	public static final ITextComponent TOOLTIP_2 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_2").withStyle(s -> s.applyFormat(TextFormatting.GRAY));
 	
 	public HealthinessTonicItem(Properties properties)
 	{
@@ -27,18 +29,18 @@ public class HealthinessTonicItem extends Item
 	}
 
 	@Override
-	public UseAction getUseAction(ItemStack stack)
+	public UseAction getUseAnimation(ItemStack stack)
 	{
 		return UseAction.DRINK;
 	}
 
 	@Override
-	public ItemStack onItemUseFinish(ItemStack stack, World world, LivingEntity entity)
+	public ItemStack finishUsingItem(ItemStack stack, World world, LivingEntity entity)
 	{
-		super.onItemUseFinish(stack, world, entity);
+		super.finishUsingItem(stack, world, entity);
 		PlayerEntity player = entity instanceof PlayerEntity ? (PlayerEntity) entity : null;
 		
-		if (player == null || !player.abilities.isCreativeMode)
+		if (player == null || !player.abilities.instabuild)
 		{
 			if (stack.isEmpty())
 			{
@@ -47,7 +49,7 @@ public class HealthinessTonicItem extends Item
 
 			if (player != null)
 			{
-				player.inventory.addItemStackToInventory(this.getContainerItem(stack));
+				player.inventory.add(this.getContainerItem(stack));
 			}
 		}
 
@@ -56,9 +58,9 @@ public class HealthinessTonicItem extends Item
 
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn)
+	public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn)
 	{
-		super.addInformation(stack, worldIn, tooltip, flagIn);
+		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		tooltip.add(TOOLTIP_0);
 		tooltip.add(TOOLTIP_1);
 		tooltip.add(TOOLTIP_2);

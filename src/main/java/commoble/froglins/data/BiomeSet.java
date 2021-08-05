@@ -72,7 +72,7 @@ public class BiomeSet
 				try
 				{
 					ResourceLocation biomeLocation = new ResourceLocation(s); // can throw RL exception
-					biomes.add(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, biomeLocation));
+					biomes.add(RegistryKey.create(Registry.BIOME_REGISTRY, biomeLocation));
 				}
 				catch(ResourceLocationException e)
 				{
@@ -86,7 +86,7 @@ public class BiomeSet
 	static List<String> getBiomeNames(Set<RegistryKey<Biome>> biomes)
 	{
 		return biomes.stream()
-			.map(key -> key.getLocation().toString())
+			.map(key -> key.location().toString())
 			.collect(Collectors.toList());
 	}
 }

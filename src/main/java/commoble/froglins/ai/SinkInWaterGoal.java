@@ -10,6 +10,8 @@ import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import net.minecraft.entity.ai.goal.Goal.Flag;
+
 public class SinkInWaterGoal extends Goal
 {
 	private final FroglinEntity froglin;
@@ -17,13 +19,13 @@ public class SinkInWaterGoal extends Goal
 	public SinkInWaterGoal(FroglinEntity froglin)
 	{
 		this.froglin = froglin;
-		this.setMutexFlags(EnumSet.of(Flag.MOVE, Flag.JUMP));
+		this.setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP));
 	}
 
 	// whether AI routine should start
 	// shouldContinueExecuting delegates to this as well
 	@Override
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
 		return this.froglin.isInWater() && this.froglin.wantsToHide();
 	}
@@ -32,27 +34,27 @@ public class SinkInWaterGoal extends Goal
 	@Override
 	public void tick()
 	{
-		World world = this.froglin.world;
-		if (world != null && !world.isRemote)
+		World world = this.froglin.level;
+		if (world != null && !world.isClientSide)
 		{
 			
 			// handle digging
 			if (world != null && (world.getGameTime() + this.froglin.hashCode()) % Froglins.INSTANCE.serverConfig.froglinDigFrequency.get() == 0)
 			{
-				BlockPos pos = this.froglin.getPosition();
-				if (world.isAirBlock(pos.up(2)) || world.isAirBlock(pos.up(3)))
+				BlockPos pos = this.froglin.blockPosition();
+				if (world.isEmptyBlock(pos.above(2)) || world.isEmptyBlock(pos.above(3)))
 				{
 					int posX = pos.getX();
 					int posY = pos.getY();
 					int posZ = pos.getZ();
-					Iterable<BlockPos> digPositions = BlockPos.getAllInBoxMutable(posX-1, posY-1, posZ-1, posX+1, posY-1, posZ+1);
+					Iterable<BlockPos> digPositions = BlockPos.betweenClosed(posX-1, posY-1, posZ-1, posX+1, posY-1, posZ+1);
 					for (BlockPos checkPos : digPositions)
 					{
-						BlockPos aboveCheckPos = checkPos.up();
-						boolean tryDig = (checkPos.getX() == pos.getX() && checkPos.getZ() == pos.getZ()) || world.rand.nextInt(4) == 0;
+						BlockPos aboveCheckPos = checkPos.above();
+						boolean tryDig = (checkPos.getX() == pos.getX() && checkPos.getZ() == pos.getZ()) || world.random.nextInt(4) == 0;
 						if (tryDig
 							&& Froglins.DIGGABLE_TAG.contains(world.getBlockState(checkPos).getBlock())
-							&& world.hasWater(aboveCheckPos)
+							&& world.isWaterAt(aboveCheckPos)
 							&& world.getBlockState(aboveCheckPos).getMaterial().isReplaceable())
 						{
 							world.removeBlock(checkPos, false);
@@ -65,7 +67,7 @@ public class SinkInWaterGoal extends Goal
 			int eggs = this.froglin.data.getEggs();
 			if (eggs > 0
 				&& this.froglin.getPose() == Pose.CROUCHING
-				&& this.froglin.getRNG().nextInt(Froglins.INSTANCE.serverConfig.froglinEggFrequency.get()) == 0)
+				&& this.froglin.getRandom().nextInt(Froglins.INSTANCE.serverConfig.froglinEggFrequency.get()) == 0)
 			{
 				tryPlaceEgg(world, this.froglin);
 			}
@@ -75,7 +77,7 @@ public class SinkInWaterGoal extends Goal
 	
 	protected static void tryPlaceEgg(World world, FroglinEntity froglin)
 	{
-		BlockPos froglinPos = froglin.getPosition();
+		BlockPos froglinPos = froglin.blockPosition();
 		
 		// check froglin pos first 
 		
@@ -83,25 +85,25 @@ public class SinkInWaterGoal extends Goal
 		
 		if (eggBlock.isPositionValidAndInWater(world, froglinPos))
 		{
-			world.setBlockState(froglinPos, eggBlock.getDefaultState()
-				.with(FroglinEggBlock.WATERLOGGED, true)
-				.with(FroglinEggBlock.PERSISTANT, froglin.laysPersistantEggs()));
+			world.setBlockAndUpdate(froglinPos, eggBlock.defaultBlockState()
+				.setValue(FroglinEggBlock.WATERLOGGED, true)
+				.setValue(FroglinEggBlock.PERSISTANT, froglin.laysPersistantEggs()));
 			froglin.data.addEggs(-1);
 			return;
 		}
 		
 		// otherwise, check random block nearby
 		
-		int xOff = -2 + world.rand.nextInt(5);
-		int yOff = -1 + world.rand.nextInt(3);
-		int zOff = -2 + world.rand.nextInt(5);
-		BlockPos checkPos = froglinPos.add(xOff,yOff,zOff);
+		int xOff = -2 + world.random.nextInt(5);
+		int yOff = -1 + world.random.nextInt(3);
+		int zOff = -2 + world.random.nextInt(5);
+		BlockPos checkPos = froglinPos.offset(xOff,yOff,zOff);
 		
 		if (eggBlock.isPositionValidAndInWater(world, checkPos))
 		{
-			world.setBlockState(checkPos, eggBlock.getDefaultState()
-				.with(FroglinEggBlock.WATERLOGGED, true)
-				.with(FroglinEggBlock.PERSISTANT, froglin.laysPersistantEggs()));
+			world.setBlockAndUpdate(checkPos, eggBlock.defaultBlockState()
+				.setValue(FroglinEggBlock.WATERLOGGED, true)
+				.setValue(FroglinEggBlock.PERSISTANT, froglin.laysPersistantEggs()));
 			froglin.data.addEggs(-1);
 		}
 	}

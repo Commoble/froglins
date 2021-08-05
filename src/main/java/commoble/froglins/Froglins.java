@@ -81,7 +81,7 @@ public class Froglins
 	
 	public static final Logger LOGGER = LogManager.getLogger();
 	
-	public static final ITag<Block> DIGGABLE_TAG = BlockTags.makeWrapperTag("froglins:diggable");
+	public static final ITag<Block> DIGGABLE_TAG = BlockTags.bind("froglins:diggable");
 	public static final ITag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
 	public static final ITag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
 	
@@ -90,7 +90,7 @@ public class Froglins
 	
 	// forge registry order doesn't currently work well with spawn eggs
 	// make so we have to make the froglin entity type before the egg item
-	public final EntityType<FroglinEntity> froglin = EntityType.Builder.create(FroglinEntity::new, EntityClassification.MONSTER)
+	public final EntityType<FroglinEntity> froglin = EntityType.Builder.of(FroglinEntity::new, EntityClassification.MONSTER)
 		.build(new ResourceLocation(MODID, Names.FROGLIN).toString());
 	
 	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
@@ -130,18 +130,18 @@ public class Froglins
 		// register objects via deferred registers
 		this.froglinEggBlock = blocks.register(Names.FROGLIN_EGG,
 			() -> new FroglinEggBlock(
-				AbstractBlock.Properties.create(Material.OCEAN_PLANT)
-					.notSolid()
-					.doesNotBlockMovement()
-					.tickRandomly()
-					.zeroHardnessAndResistance()
-					.sound(SoundType.SLIME)));
+				AbstractBlock.Properties.of(Material.WATER_PLANT)
+					.noOcclusion()
+					.noCollission()
+					.randomTicks()
+					.instabreak()
+					.sound(SoundType.SLIME_BLOCK)));
 		
 		this.froglinSpawnEggItem = items.register(Names.FROGLIN_SPAWN_EGG, () ->
-			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().group(ItemGroup.MISC)));
+			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().tab(ItemGroup.TAB_MISC)));
 		
 		this.froglinEggItem = items.register(Names.FROGLIN_EGG, () ->
-			new BlockItem(this.froglinEggBlock.get(), new Item.Properties().group(ItemGroup.BREWING)));
+			new BlockItem(this.froglinEggBlock.get(), new Item.Properties().tab(ItemGroup.TAB_BREWING)));
 		
 		RegistryObject<HealthinessEffect> healthinessEffect = effects.register(Names.HEALTHINESS, () ->
 			new HealthinessEffect(EffectType.BENEFICIAL, 0x032f00));
@@ -149,30 +149,30 @@ public class Froglins
 		this.froglinEyeItem = items.register(Names.FROGLIN_EYE, () ->
 			new Item(
 				new Item.Properties()
-					.group(ItemGroup.BREWING)
+					.tab(ItemGroup.TAB_BREWING)
 					.food(new Food.Builder()
-						.fastToEat()
-						.hunger(1)
-						.saturation(0.1F)
+						.fast()
+						.nutrition(1)
+						.saturationMod(0.1F)
 						.build()
 						)));
 		
 		this.healthinessTonicItem = items.register(Names.HEALTHINESS_TONIC, () ->
 			new HealthinessTonicItem(
 				new Item.Properties()
-					.group(ItemGroup.BREWING)
-					.maxStackSize(1)
-					.containerItem(Items.GLASS_BOTTLE)
+					.tab(ItemGroup.TAB_BREWING)
+					.stacksTo(1)
+					.craftRemainder(Items.GLASS_BOTTLE)
 					.food(
 						new Food.Builder()
 							.effect(() -> new EffectInstance(healthinessEffect.get(), 1), 1F)
-							.setAlwaysEdible()
+							.alwaysEat()
 							.build()
 							)));
 		
 		RegistryObject<Effect> frogsMightEffect = effects.register(Names.FROGS_MIGHT, () ->
 			new PublicEffect(EffectType.BENEFICIAL, 0xd4f6bc)
-				.addAttributesModifier(ForgeMod.SWIM_SPEED.get(), "1c2a2b4d-7c8e-473c-a6c3-d68af3d47704", 0.4F, AttributeModifier.Operation.MULTIPLY_TOTAL));
+				.addAttributeModifier(ForgeMod.SWIM_SPEED.get(), "1c2a2b4d-7c8e-473c-a6c3-d68af3d47704", 0.4F, AttributeModifier.Operation.MULTIPLY_TOTAL));
 		
 		// name args in Potion constructor is used for translation key
 		// convention is to use the same name for normal/long/strong potions
@@ -190,15 +190,15 @@ public class Froglins
 		String frogChampionTranslationKey = makePotionTranslationKey(Names.FROG_CHAMPION);
 		this.frogChampionPotion = potions.register(Names.FROG_CHAMPION, () ->
 			new Potion(frogChampionTranslationKey,
-				new EffectInstance(Effects.JUMP_BOOST, 1800, 2),
+				new EffectInstance(Effects.JUMP, 1800, 2),
 				new EffectInstance(frogsMightEffect.get(), 1800)));
 		this.longFrogChampionPotion = potions.register(Names.LONG_FROG_CHAMPION, () ->
 			new Potion(frogChampionTranslationKey,
-				new EffectInstance(Effects.JUMP_BOOST, 4800, 2),
+				new EffectInstance(Effects.JUMP, 4800, 2),
 				new EffectInstance(frogsMightEffect.get(), 4800)));
 		this.strongFrogChampionPotion = potions.register(Names.STRONG_FROG_CHAMPION, () ->
 			new Potion(frogChampionTranslationKey,
-				new EffectInstance(Effects.JUMP_BOOST, 900, 3),
+				new EffectInstance(Effects.JUMP, 900, 3),
 				new EffectInstance(frogsMightEffect.get(), 900, 1)));
 		
 		paintings.register(Names.FROGLIN, () -> new PaintingType(32,32));
@@ -238,7 +238,7 @@ public class Froglins
 	// stuff can safely be put into vanilla maps here
 	public void afterCommonSetup()
 	{
-		GlobalEntityTypeAttributes.put(this.froglin, FroglinEntity.createAttributes().create());
+		GlobalEntityTypeAttributes.put(this.froglin, FroglinEntity.createAttributes().build());
 		EntitySpawnPlacementRegistry.register(this.froglin, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, FroglinEntity::canRandomlySpawn);
 		
 		// add spawn egg behaviours to dispenser
@@ -248,17 +248,17 @@ public class Froglins
 			 * Dispense the specified stack, play the dispense sound and spawn particles.
 			 */
 			@Override
-			public ItemStack dispenseStack(IBlockSource source, ItemStack stack)
+			public ItemStack execute(IBlockSource source, ItemStack stack)
 			{
-				Direction direction = source.getBlockState().get(DispenserBlock.FACING);
+				Direction direction = source.getBlockState().getValue(DispenserBlock.FACING);
 				EntityType<?> entitytype = ((SpawnEggItem) stack.getItem()).getType(stack.getTag());
-				entitytype.spawn(source.getWorld(), stack, (PlayerEntity) null, source.getBlockPos().offset(direction), SpawnReason.DISPENSER, direction != Direction.UP, false);
+				entitytype.spawn(source.getLevel(), stack, (PlayerEntity) null, source.getPos().relative(direction), SpawnReason.DISPENSER, direction != Direction.UP, false);
 				stack.shrink(1);
 				return stack;
 			}
 		};
 		
-		DispenserBlock.registerDispenseBehavior(this.froglinSpawnEggItem.get(), spawnEggBehavior);
+		DispenserBlock.registerBehavior(this.froglinSpawnEggItem.get(), spawnEggBehavior);
 		
 		BrewingRecipeRegistry.addRecipe(potionToItemRecipe(
 			Items.POTION,
@@ -275,7 +275,7 @@ public class Froglins
 	
 	public void addThingsToBiomeOnBiomeLoad(BiomeLoadingEvent event)
 	{
-		RegistryKey<Biome> key = RegistryKey.getOrCreateKey(Registry.BIOME_KEY, event.getName());
+		RegistryKey<Biome> key = RegistryKey.create(Registry.BIOME_REGISTRY, event.getName());
 		List<Spawners> spawners = event.getSpawns().getSpawner(EntityClassification.MONSTER);
 		
 		for (FroglinSpawnEntry entry : this.commonConfig.spawns.get())
@@ -325,8 +325,8 @@ public class Froglins
 	
 	public static BrewingRecipe potionToItemRecipe(Item inputPotionItem, Potion inputPotion, Item catalyst, Item output)
 	{
-		Ingredient inputPotionIngredient = NBTIngredient.fromStacks(PotionUtils.addPotionToItemStack(new ItemStack(inputPotionItem), inputPotion));
-		Ingredient catalystIngredient = Ingredient.fromItems(catalyst);
+		Ingredient inputPotionIngredient = NBTIngredient.of(PotionUtils.setPotion(new ItemStack(inputPotionItem), inputPotion));
+		Ingredient catalystIngredient = Ingredient.of(catalyst);
 		ItemStack result = new ItemStack(output);
 		return new BrewingRecipe(inputPotionIngredient, catalystIngredient, result);
 	}

@@ -63,19 +63,19 @@ public class FroglinEntity extends MonsterEntity
 	public FroglinEntity(EntityType<? extends FroglinEntity> type, World worldIn)
 	{
 		super(type, worldIn);
-		this.moveController = new FroglinMovementController(this);
+		this.moveControl = new FroglinMovementController(this);
 	}
 	
 	////// Entity Properties //////
 
 	public static AttributeModifierMap.MutableAttribute createAttributes()
 	{
-//		return MonsterEntity.func_234295_eP_(); // standard attributes
-		return MonsterEntity.func_234295_eP_()
-			.createMutableAttribute(Attributes.FOLLOW_RANGE, 20.0D)	// zombies are 35, monster default is 16
-			.createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.3F)	// zombies are 0.23F, players are 0.7F?
-			.createMutableAttribute(ForgeMod.SWIM_SPEED.get(), 1.5F)
-			.createMutableAttribute(Attributes.ATTACK_DAMAGE, 4.0D);
+//		return MonsterEntity.createMonsterAttributes(); // standard attributes
+		return MonsterEntity.createMonsterAttributes()
+			.add(Attributes.FOLLOW_RANGE, 20.0D)	// zombies are 35, monster default is 16
+			.add(Attributes.MOVEMENT_SPEED, 0.3F)	// zombies are 0.23F, players are 0.7F?
+			.add(ForgeMod.SWIM_SPEED.get(), 1.5F)
+			.add(Attributes.ATTACK_DAMAGE, 4.0D);
 	}
 	
 	public static boolean canRandomlySpawn(EntityType<FroglinEntity> type, IServerWorld world, SpawnReason reason, BlockPos pos, Random rand)
@@ -84,8 +84,8 @@ public class FroglinEntity extends MonsterEntity
 		int y = pos.getY();
 		return world.getDifficulty() != Difficulty.PEACEFUL
 			&& y >= minY
-			&& MonsterEntity.isValidLightLevel(world, pos, rand)
-			&& (reason == SpawnReason.SPAWNER || world.getBlockState(pos).getFluidState().isTagged(FluidTags.WATER));
+			&& MonsterEntity.isDarkEnoughToSpawn(world, pos, rand)
+			&& (reason == SpawnReason.SPAWNER || world.getBlockState(pos).getFluidState().is(FluidTags.WATER));
 	}
 
 	@Override
@@ -121,7 +121,7 @@ public class FroglinEntity extends MonsterEntity
 		
 		// TODO set calls for help?
 		this.targetSelector.addGoal(2, new PredicatedGoal<>(this,
-			new HurtByTargetGoal(this).setCallsForHelp(),
+			new HurtByTargetGoal(this).setAlertOthers(),
 			FroglinEntity::wantsToRetaliate));
 		this.targetSelector.addGoal(3, new PredicatedGoal<>(this,
 			new NearestAttackableTargetGoal<>(this, MobEntity.class, 20, false, false, entity -> Froglins.EDIBLE_FISH_TAG.contains(entity.getType())),
@@ -135,14 +135,14 @@ public class FroglinEntity extends MonsterEntity
 	}
 
 	@Override
-	public boolean canDespawn(double distanceToClosestPlayer)
+	public boolean removeWhenFarAway(double distanceToClosestPlayer)
 	{
-		return this.idleTime > this.data.getFullness() && super.canDespawn(distanceToClosestPlayer);
+		return this.noActionTime > this.data.getFullness() && super.removeWhenFarAway(distanceToClosestPlayer);
 	}
 
 	// same as players (zombies are -0.45, skeletons are -0.6)
 	@Override
-	public double getYOffset()
+	public double getMyRidingOffset()
 	{
 		return -0.35D;
 	}
@@ -158,29 +158,29 @@ public class FroglinEntity extends MonsterEntity
 	@Override
 	protected SoundEvent getAmbientSound()
 	{
-		return SoundEvents.ENTITY_ZOGLIN_AMBIENT;
+		return SoundEvents.ZOGLIN_AMBIENT;
 	}
 
 	@Override
 	protected SoundEvent getHurtSound(DamageSource damageSourceIn)
 	{
-		return SoundEvents.ENTITY_ZOGLIN_HURT;
+		return SoundEvents.ZOGLIN_HURT;
 	}
 
 	@Override
 	protected SoundEvent getDeathSound()
 	{
-		return SoundEvents.ENTITY_ZOGLIN_DEATH;
+		return SoundEvents.ZOGLIN_DEATH;
 	}
 
 	@Override
 	protected void playStepSound(BlockPos pos, BlockState blockIn)
 	{
-		this.playSound(SoundEvents.ENTITY_ZOGLIN_STEP, 0.15F, 1.0F);
+		this.playSound(SoundEvents.ZOGLIN_STEP, 0.15F, 1.0F);
 	}
 
 	@Override
-	public CreatureAttribute getCreatureAttribute()
+	public CreatureAttribute getMobType()
 	{
 		return CreatureAttribute.WATER;
 	}
@@ -195,9 +195,9 @@ public class FroglinEntity extends MonsterEntity
 	// normally this returns false if the entity is in water, or if the entity is touching another entity
 	// water mobs must override this to skip the water check
 	@Override
-	public boolean isNotColliding(IWorldReader worldIn)
+	public boolean checkSpawnObstruction(IWorldReader worldIn)
 	{
-		return worldIn.checkNoEntityCollision(this);
+		return worldIn.isUnobstructed(this);
 	}
 
 	// affects how fast you stop moving after you stop moving (lower numbers = stop moving sooner)
@@ -211,15 +211,15 @@ public class FroglinEntity extends MonsterEntity
 
 
 	@Override
-	protected float getJumpUpwardsMotion()
+	protected float getJumpPower()
 	{
-		return (1F + (float)this.rand.nextGaussian()*0.5F)
+		return (1F + (float)this.random.nextGaussian()*0.5F)
 			* (this.getPose() == Pose.CROUCHING ? 1.5F : 1F)
-			* super.getJumpUpwardsMotion();
+			* super.getJumpPower();
 	}
 
 	@Override
-	public float getBlockPathWeight(BlockPos pos, IWorldReader world)
+	public float getWalkTargetValue(BlockPos pos, IWorldReader world)
 	{
 		return this.wantsToHunt()
 			? this.getHuntingBlockPathWeight(pos, world)
@@ -229,7 +229,7 @@ public class FroglinEntity extends MonsterEntity
 	////// Minecraft Events //////
 
 	@Override
-	protected void idle()
+	protected void updateNoActionTime()
 	{
 		// for all MobEntities, idle time increments by +1/tick when a player isn't within 32 meters (and resets if a player is near)
 		// for MonsterEntities, idle() (which is declared by MonsterEntity) increments idle time by an additional +2/tick while the monster is in daylight
@@ -241,12 +241,12 @@ public class FroglinEntity extends MonsterEntity
 	public void tick()
 	{
 		super.tick();
-		if (!this.world.isRemote)	// do game logic on server
+		if (!this.level.isClientSide)	// do game logic on server
 		{
 			if (!this.dead) // make sure we only do these things if we didn't die during super.tick()
 			{
 				// slowly heal while in water
-				if (this.isInWater() && this.world.getRandom().nextInt() % 20 == 0)
+				if (this.isInWater() && this.level.getRandom().nextInt() % 20 == 0)
 				{
 					this.heal(1F);
 				}
@@ -262,25 +262,25 @@ public class FroglinEntity extends MonsterEntity
 				}
 				
 				// handle pose
-				if (this.isOnGround() && !this.isJumping && !this.moveController.isUpdating())
+				if (this.isOnGround() && !this.jumping && !this.moveControl.hasWanted())
 				{
-					if (this.getRNG().nextInt(100) == 0)
+					if (this.getRandom().nextInt(100) == 0)
 					{
 						this.setPose(Pose.CROUCHING);
 					}
 				}
-				else if (!this.isOnGround() || this.getRNG().nextInt(20) == 0)
+				else if (!this.isOnGround() || this.getRandom().nextInt(20) == 0)
 				{
 					this.setPose(Pose.STANDING);
 				}
 				else
 				{
-					LivingEntity target = this.getAttackTarget();
+					LivingEntity target = this.getTarget();
 					if (target != null)
 					{
-						double distSq = this.getDistanceSq(target);
-						double attackReachSq = this.getWidth() * 2.0F * target.getWidth() * 2.0F + target.getWidth();
-						if (distSq > attackReachSq && distSq < attackReachSq * attackReachSq && this.getRNG().nextInt(100) == 0)
+						double distSq = this.distanceToSqr(target);
+						double attackReachSq = this.getBbWidth() * 2.0F * target.getBbWidth() * 2.0F + target.getBbWidth();
+						if (distSq > attackReachSq && distSq < attackReachSq * attackReachSq && this.getRandom().nextInt(100) == 0)
 						{
 							this.setPose(Pose.CROUCHING);
 						}
@@ -292,17 +292,17 @@ public class FroglinEntity extends MonsterEntity
 
 	// called when this entity kills another entity
 	@Override
-	public void func_241847_a(ServerWorld world, LivingEntity killedEntity)
+	public void killed(ServerWorld world, LivingEntity killedEntity)
 	{
-		super.func_241847_a(world, killedEntity);
+		super.killed(world, killedEntity);
 		this.data.addFullness(Froglins.INSTANCE.serverConfig.froglinFullnessFromKill.get());
 		this.data.addEggs(1);
 	}
 
 	@Override
-	public int getMaxFallHeight()
+	public int getMaxFallDistance()
 	{
-		return super.getMaxFallHeight()*2;
+		return super.getMaxFallDistance()*2;
 	}
 
 	@Override
@@ -312,16 +312,16 @@ public class FroglinEntity extends MonsterEntity
 	}
 
 	@Override
-	public void jump()
+	public void jumpFromGround()
 	{
-		super.jump();
+		super.jumpFromGround();
 	}
 	
 	////// Syncing and Saving //////
 	@Override
-	public void writeAdditional(CompoundNBT compound)
+	public void addAdditionalSaveData(CompoundNBT compound)
 	{
-		super.writeAdditional(compound);
+		super.addAdditionalSaveData(compound);
 		FroglinData.CODEC.encodeStart(NBTDynamicOps.INSTANCE, this.data)
 			.result()
 			.ifPresent(dataTag -> compound.put(DATA, dataTag));
@@ -332,9 +332,9 @@ public class FroglinEntity extends MonsterEntity
 	 * (abstract) Protected helper method to read subclass entity data from NBT.
 	 */
 	@Override
-	public void readAdditional(CompoundNBT compound)
+	public void readAdditionalSaveData(CompoundNBT compound)
 	{
-		super.readAdditional(compound);
+		super.readAdditionalSaveData(compound);
 		FroglinData.CODEC.parse(NBTDynamicOps.INSTANCE, compound.get(DATA))
 			.result()
 			.ifPresent(readData -> this.data = readData);
@@ -347,13 +347,13 @@ public class FroglinEntity extends MonsterEntity
 	public float getHuntingBlockPathWeight(BlockPos pos, IWorldReader world)
 	{
 		// prefer highlands, prefer far away places
-		return Math.min(0F, pos.getY()) * (float)pos.distanceSq(this.getPosition());
+		return Math.min(0F, pos.getY()) * (float)pos.distSqr(this.blockPosition());
 	}
 	
 	public float getHidingBlockPathWeight(BlockPos pos, IWorldReader world)
 	{
-		int base = world.getHeight() - pos.getY();	// prefer lowlands
-		if (world.getFluidState(pos).isTagged(FluidTags.WATER))	// greatly prefer water
+		int base = world.getMaxBuildHeight() - pos.getY();	// prefer lowlands
+		if (world.getFluidState(pos).is(FluidTags.WATER))	// greatly prefer water
 		{
 			return base * 10F;
 		}
@@ -365,7 +365,7 @@ public class FroglinEntity extends MonsterEntity
 	
 	public boolean wantsToHide()
 	{
-		return (this.getAttackTarget() == null || this.wantsToRunAway()) && !this.wantsToHunt();
+		return (this.getTarget() == null || this.wantsToRunAway()) && !this.wantsToHunt();
 	}
 	
 	public boolean wantsToRunAway()
@@ -384,9 +384,9 @@ public class FroglinEntity extends MonsterEntity
 	// return true if the sun isn't out or it's raining
 	public boolean doesWeatherAllowHunting()
 	{
-		return !this.world.isDaytime() || 
-			(this.world.isRaining() &&
-				this.world.getBiome(this.getPosition())
+		return !this.level.isDay() || 
+			(this.level.isRaining() &&
+				this.level.getBiome(this.blockPosition())
 				.getPrecipitation() == RainType.RAIN);
 	}
 	
@@ -409,7 +409,7 @@ public class FroglinEntity extends MonsterEntity
 
 	public boolean laysPersistantEggs()
 	{
-		return Froglins.INSTANCE.serverConfig.persistantFroglinsLayPersistantFroglinEggs.get() && this.isNoDespawnRequired();
+		return Froglins.INSTANCE.serverConfig.persistantFroglinsLayPersistantFroglinEggs.get() && this.isPersistenceRequired();
 	}
 	
 	public static class FroglinData
@@ -459,40 +459,40 @@ public class FroglinEntity extends MonsterEntity
 		@Override
 		public void tick()
 		{
-			LivingEntity target = this.froglin.getAttackTarget();
-			Vector3d velocity = this.froglin.getMotion();
+			LivingEntity target = this.froglin.getTarget();
+			Vector3d velocity = this.froglin.getDeltaMovement();
 			if (target != null)
 			{
 				if (this.froglin.isInWater())
 				{
 					if (target.isInWater())
 					{
-						if (this.froglin.getNavigator().noPath())
+						if (this.froglin.getNavigation().isDone())
 						{
-							this.froglin.setAIMoveSpeed(0.0F);
+							this.froglin.setSpeed(0.0F);
 							return;
 						}
 
-						double dx = this.posX - this.froglin.getPosX();
-						double dy = this.posY - this.froglin.getPosY();
-						double dz = this.posZ - this.froglin.getPosZ();
+						double dx = this.wantedX - this.froglin.getX();
+						double dy = this.wantedY - this.froglin.getY();
+						double dz = this.wantedZ - this.froglin.getZ();
 						double distance = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
 						dy = dy / distance;
 						float yawDegrees = (float) (MathHelper.atan2(dz, dx) * (180F / (float) Math.PI)) - 90.0F;
-						this.froglin.rotationYaw = this.limitAngle(this.froglin.rotationYaw, yawDegrees, 90.0F);
-						this.froglin.renderYawOffset = this.froglin.rotationYaw;
+						this.froglin.yRot = this.rotlerp(this.froglin.yRot, yawDegrees, 90.0F);
+						this.froglin.yBodyRot = this.froglin.yRot;
 					}
 				}
 				else if (!this.froglin.isOnGround())
 				{
 					if (velocity.x != 0.0D && velocity.z != 0.0D)
 					{
-						this.froglin.setMotion(velocity.x + 0.01D, velocity.y, velocity.z + 0.01D);
+						this.froglin.setDeltaMovement(velocity.x + 0.01D, velocity.y, velocity.z + 0.01D);
 					}
 					else
 					{
-						Vector3d offset = target.getPositionVec().subtract(this.froglin.getPositionVec()).normalize();
-						this.froglin.setMotion(velocity.x + 0.01D * offset.x, velocity.y, velocity.z + 0.01D * offset.z);
+						Vector3d offset = target.position().subtract(this.froglin.position()).normalize();
+						this.froglin.setDeltaMovement(velocity.x + 0.01D * offset.x, velocity.y, velocity.z + 0.01D * offset.z);
 					}
 				}
 			}

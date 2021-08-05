@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import commoble.froglins.FroglinEntity;
 import net.minecraft.entity.ai.goal.Goal;
 
+import net.minecraft.entity.ai.goal.Goal.Flag;
+
 public class JumpSometimesGoal extends Goal
 {
 	private final FroglinEntity froglin;
@@ -12,29 +14,29 @@ public class JumpSometimesGoal extends Goal
 	public JumpSometimesGoal(FroglinEntity froglin)
 	{
 		this.froglin = froglin;
-		this.setMutexFlags(EnumSet.of(Flag.JUMP));
+		this.setFlags(EnumSet.of(Flag.JUMP));
 	}
 
 	@Override
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		return !this.froglin.isBeingRidden()
-			&& this.froglin.getRNG().nextInt(10) == 0
-			&& this.froglin.getMotion().lengthSquared() > 0.001F
+		return !this.froglin.isVehicle()
+			&& this.froglin.getRandom().nextInt(10) == 0
+			&& this.froglin.getDeltaMovement().lengthSqr() > 0.001F
 			&& !this.froglin.isInWater()
 			&& this.froglin.isOnGround(); 
 	}
 
 	@Override
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
 		return !this.froglin.isOnGround();
 	}
 
 	@Override
-	public void startExecuting()
+	public void start()
 	{
-		this.froglin.jump();
+		this.froglin.jumpFromGround();
 	}
 
 }

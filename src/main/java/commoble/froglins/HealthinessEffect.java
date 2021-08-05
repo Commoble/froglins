@@ -20,30 +20,30 @@ public class HealthinessEffect extends InstantEffect
 	// for instant effects from food items,
 	// the effect instance must be added to the food item with a duration of exactly 1 tick
 	@Override
-	public void performEffect(LivingEntity entity, int amplifier)
+	public void applyEffectTick(LivingEntity entity, int amplifier)
 	{
-		if (!entity.isEntityUndead())
+		if (!entity.isInvertedHealAndHarm())
 		{
 			float missingHealth = entity.getMaxHealth() - entity.getHealth(); 
 			entity.heal((float)Math.floor(Math.sqrt(missingHealth)));
 			
-			if (!entity.world.isRemote())
+			if (!entity.level.isClientSide())
 			{
-				entity.removePotionEffect(Effects.BLINDNESS);
-				entity.removePotionEffect(Effects.NAUSEA);
-				entity.removePotionEffect(Effects.POISON);
-				entity.removePotionEffect(Effects.HUNGER);
+				entity.removeEffect(Effects.BLINDNESS);
+				entity.removeEffect(Effects.CONFUSION);
+				entity.removeEffect(Effects.POISON);
+				entity.removeEffect(Effects.HUNGER);
 				
 				if (entity instanceof PlayerEntity)
 				{
 					PlayerEntity player = (PlayerEntity)entity;
-					FoodStats foodStats = player.getFoodStats();
+					FoodStats foodStats = player.getFoodData();
 					
 					int currentFood = foodStats.getFoodLevel();
 					int maxFood = 20;
 					double missingFood = maxFood - currentFood;
 					int foodRestored = MathHelper.floor(Math.sqrt(missingFood));
-					foodStats.addStats(foodRestored, 0.0F);
+					foodStats.eat(foodRestored, 0.0F);
 				}
 			}
 		}

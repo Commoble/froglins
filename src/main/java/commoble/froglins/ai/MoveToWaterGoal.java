@@ -27,11 +27,11 @@ public class MoveToWaterGoal extends Goal
 	{
 		this.froglin = froglin;
 		this.speedMultiplier = speedMultiplier;
-        this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
+        this.setFlags(EnumSet.of(Goal.Flag.MOVE));
 	}
 
 	@Override
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
 		if (this.froglin.wantsToHide() && !this.froglin.isInWater())
 		{
@@ -42,9 +42,9 @@ public class MoveToWaterGoal extends Goal
 			}
 			else
 			{
-				this.x = target.getX();
-				this.y = target.getY();
-				this.z = target.getZ();
+				this.x = target.x();
+				this.y = target.y();
+				this.z = target.z();
 				return true;
 			}
 		}
@@ -55,20 +55,20 @@ public class MoveToWaterGoal extends Goal
 	}
 
 	@Override
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
-		return !this.froglin.getNavigator().noPath();
+		return !this.froglin.getNavigation().isDone();
 	}
 	
 	@Override
-	public void startExecuting()
+	public void start()
 	{
 		this.isRunning = true;
-		this.froglin.getNavigator().tryMoveToXYZ(this.x, this.y, this.z, this.speedMultiplier);
+		this.froglin.getNavigation().moveTo(this.x, this.y, this.z, this.speedMultiplier);
 	}
 	
 	@Override
-	public void resetTask()
+	public void stop()
 	{
 		this.isRunning = false;
 	}
@@ -76,15 +76,15 @@ public class MoveToWaterGoal extends Goal
 	@Nullable
 	private Vector3d tryFindWater()
 	{
-		Random rand = this.froglin.getRNG();
-		BlockPos froglinPos = this.froglin.getPosition();
+		Random rand = this.froglin.getRandom();
+		BlockPos froglinPos = this.froglin.blockPosition();
 
 		for (int i = 0; i < 10; ++i)
 		{
-			BlockPos checkPos = froglinPos.add(rand.nextInt(20) - 10, 2 - rand.nextInt(8), rand.nextInt(20) - 10);
-			if (this.froglin.world.getBlockState(checkPos).isIn(Blocks.WATER))
+			BlockPos checkPos = froglinPos.offset(rand.nextInt(20) - 10, 2 - rand.nextInt(8), rand.nextInt(20) - 10);
+			if (this.froglin.level.getBlockState(checkPos).is(Blocks.WATER))
 			{
-				return Vector3d.copyCenteredHorizontally(checkPos);
+				return Vector3d.atBottomCenterOf(checkPos);
 			}
 		}
 

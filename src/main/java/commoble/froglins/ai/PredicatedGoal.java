@@ -6,6 +6,8 @@ import java.util.function.Predicate;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
 
+import net.minecraft.entity.ai.goal.Goal.Flag;
+
 /**
  * Wrapper class around another Goal that allows the delegated goal to start or continue executing
  * when its given condition is true for its owner entity.
@@ -27,40 +29,40 @@ public class PredicatedGoal<E extends LivingEntity> extends Goal
 	}
 
 	@Override
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		return this.predicate.test(this.entity) && this.delegate.shouldExecute();
+		return this.predicate.test(this.entity) && this.delegate.canUse();
 	}
 
 	@Override
-	public boolean shouldContinueExecuting()
+	public boolean canContinueToUse()
 	{
 		if (!this.predicate.test(this.entity))
 		{
-			this.delegate.resetTask();
+			this.delegate.stop();
 			return false;
 		}
-		return this.delegate.shouldContinueExecuting();
+		return this.delegate.canContinueToUse();
 	}
 	
 	
 	
 	@Override
-	public boolean isPreemptible()
+	public boolean isInterruptable()
 	{
-		return this.delegate.isPreemptible();
-	}
-
-	@Override
-	public void startExecuting()
-	{
-		this.delegate.startExecuting();
+		return this.delegate.isInterruptable();
 	}
 
 	@Override
-	public void resetTask()
+	public void start()
 	{
-		this.delegate.resetTask();
+		this.delegate.start();
+	}
+
+	@Override
+	public void stop()
+	{
+		this.delegate.stop();
 	}
 
 	@Override
@@ -70,15 +72,15 @@ public class PredicatedGoal<E extends LivingEntity> extends Goal
 	}
 
 	@Override
-	public void setMutexFlags(EnumSet<Flag> flagSet)
+	public void setFlags(EnumSet<Flag> flagSet)
 	{
-		this.delegate.setMutexFlags(flagSet);
+		this.delegate.setFlags(flagSet);
 	}
 
 	@Override
-	public EnumSet<Flag> getMutexFlags()
+	public EnumSet<Flag> getFlags()
 	{
-		return this.delegate.getMutexFlags();
+		return this.delegate.getFlags();
 	}
 
 	@Override

@@ -15,7 +15,7 @@ public class SwimToTargetGoal extends SwimGoal
 	{
 		super(froglin);
 		this.froglin = froglin;
-		this.setMutexFlags(EnumSet.of(Goal.Flag.JUMP));
+		this.setFlags(EnumSet.of(Goal.Flag.JUMP));
 	}
 
 	/**
@@ -23,9 +23,9 @@ public class SwimToTargetGoal extends SwimGoal
 	 * necessary for execution in this method as well.
 	 */
 	@Override
-	public boolean shouldExecute()
+	public boolean canUse()
 	{
-		LivingEntity target = this.froglin.getAttackTarget();
+		LivingEntity target = this.froglin.getTarget();
 		return target != null
 			&& this.froglin.isInWater();
 	}
@@ -33,10 +33,10 @@ public class SwimToTargetGoal extends SwimGoal
 	@Override
 	public void tick()
 	{
-		LivingEntity target = this.froglin.getAttackTarget();
-		if (target != null && (!target.isInWater() || this.froglin.getPosY() < target.getPosY()) && this.froglin.getRNG().nextFloat() < 0.8F)
+		LivingEntity target = this.froglin.getTarget();
+		if (target != null && (!target.isInWater() || this.froglin.getY() < target.getY()) && this.froglin.getRandom().nextFloat() < 0.8F)
 		{
-			this.froglin.getJumpController().setJumping();
+			this.froglin.getJumpControl().jump();
 		}
 
 	}

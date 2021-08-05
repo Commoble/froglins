@@ -18,7 +18,7 @@ public class FroglinRenderer extends MobRenderer<FroglinEntity, FroglinModel>
 	}
 
 	@Override
-	public ResourceLocation getEntityTexture(FroglinEntity entity)
+	public ResourceLocation getTextureLocation(FroglinEntity entity)
 	{
 		return TEXTURE_LOCATION;
 	}
