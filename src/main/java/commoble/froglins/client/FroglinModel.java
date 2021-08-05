@@ -65,8 +65,8 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 
 		leftArm.setPos(2.5f, 5.0f, 0.0f);
 		leftArm.setRotation(-0.1745F, 0.0F, 0.0F);
-		leftArmClaws.setPos(5, 23, 5);
-		leftArmClaws.setRotation(0.0873F, 0.0F, 0.0F); //0.2618
+//		leftArmClaws.setPos(5, 23, 5);
+//		leftArmClaws.setRotation(0.0873F, 0.0F, 0.0F); //0.2618
 		rightLeg.setPos(-2, 12, 4);
 		leftLeg.setPos(2, 12, 4);
 
@@ -185,8 +185,7 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		partDefinition.addOrReplaceChild(LEFTARMCLAW, CubeListBuilder.create()
 				.texOffs(0, 0).addBox(-1.6f, -12f, -3.5f, 0f, 4f, 1f)
 				.texOffs(0,0).addBox(-2.4f, -12f, -3.5f, 0f, 4f, 1f)
-				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.ZERO);
-		partDefinition.addOrReplaceChild("right_leg", CubeListBuilder.create()
+				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.offsetAndRotation( 0, 0, 0,0.2618F, 0.0F, 0.0F));		partDefinition.addOrReplaceChild("right_leg", CubeListBuilder.create()
 				.texOffs(0, 16).addBox(-2.5f, 0f, -1f, 3f, 12f, 3f), PartPose.ZERO);
 		partDefinition.addOrReplaceChild("left_leg", CubeListBuilder.create()
 				.texOffs(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F), PartPose.ZERO);
@@ -208,6 +207,7 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		this.copyBaseBone(currentModel, model -> model.leftArm);
 		this.copyBaseBone(currentModel, model -> model.rightLeg);
 		this.copyBaseBone(currentModel, model -> model.leftLeg);
+		this.leftArmClaws.copyFrom(currentModel.leftArm);
 		
 		boolean hasBeenGliding = froglin.getFallFlyingTicks() > 4;
 		boolean isSwimming = froglin.isVisuallySwimming();
@@ -379,6 +379,9 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		this.leftArm.render(matrixStack, buffer, packedLight, packedOverlay);
 		this.rightLeg.render(matrixStack, buffer, packedLight, packedOverlay);
 		this.leftLeg.render(matrixStack, buffer, packedLight, packedOverlay);
+		this.leftArmClaws.render(matrixStack, buffer, packedLight, packedOverlay);
+		this.rightArmClaws.render(matrixStack, buffer, packedLight, packedOverlay);
+
 	}
 
 	public void setRotationAngle(ModelPart modelRenderer, float x, float y, float z)
