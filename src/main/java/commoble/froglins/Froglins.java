@@ -9,48 +9,48 @@ import org.apache.logging.log4j.Logger;
 import commoble.froglins.client.ClientEvents;
 import commoble.froglins.data.FroglinSpawnEntry;
 import commoble.froglins.util.ConfigHelper;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.DispenserBlock;
-import net.minecraft.block.SoundType;
-import net.minecraft.block.material.Material;
-import net.minecraft.dispenser.DefaultDispenseItemBehavior;
-import net.minecraft.dispenser.IBlockSource;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntitySpawnPlacementRegistry;
-import net.minecraft.entity.EntitySpawnPlacementRegistry.PlacementType;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
-import net.minecraft.entity.item.PaintingType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Food;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.SpawnEggItem;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.potion.Effect;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.EffectType;
-import net.minecraft.potion.Effects;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.PotionBrewing;
-import net.minecraft.potion.PotionUtils;
-import net.minecraft.potion.Potions;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DispenserBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
+import net.minecraft.core.BlockSource;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.SpawnPlacements.Type;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.DefaultAttributes;
+import net.minecraft.world.entity.decoration.Motive;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.PotionBrewing;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.Direction;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.MobSpawnInfo.Spawners;
-import net.minecraft.world.gen.Heightmap;
+import net.minecraft.tags.Tag;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.MinecraftForge;
@@ -81,16 +81,16 @@ public class Froglins
 	
 	public static final Logger LOGGER = LogManager.getLogger();
 	
-	public static final ITag<Block> DIGGABLE_TAG = BlockTags.bind("froglins:diggable");
-	public static final ITag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
-	public static final ITag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
+	public static final Tag<Block> DIGGABLE_TAG = BlockTags.bind("froglins:diggable");
+	public static final Tag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
+	public static final Tag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
 	
 	public final ServerConfig serverConfig;
 	public final CommonConfig commonConfig;
 	
 	// forge registry order doesn't currently work well with spawn eggs
 	// make so we have to make the froglin entity type before the egg item
-	public final EntityType<FroglinEntity> froglin = EntityType.Builder.of(FroglinEntity::new, EntityClassification.MONSTER)
+	public final EntityType<FroglinEntity> froglin = EntityType.Builder.of(FroglinEntity::new, MobCategory.MONSTER)
 		.build(new ResourceLocation(MODID, Names.FROGLIN).toString());
 	
 	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
@@ -123,14 +123,14 @@ public class Froglins
 		// create and register deferred registers
 		DeferredRegister<Block> blocks = registerRegister(modBus, ForgeRegistries.BLOCKS);
 		DeferredRegister<Item> items = registerRegister(modBus, ForgeRegistries.ITEMS);
-		DeferredRegister<Effect> effects = registerRegister(modBus, ForgeRegistries.POTIONS);
+		DeferredRegister<MobEffect> effects = registerRegister(modBus, ForgeRegistries.POTIONS);
 		DeferredRegister<Potion> potions = registerRegister(modBus, ForgeRegistries.POTION_TYPES);
-		DeferredRegister<PaintingType> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_TYPES);
+		DeferredRegister<Motive> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_TYPES);
 		
 		// register objects via deferred registers
 		this.froglinEggBlock = blocks.register(Names.FROGLIN_EGG,
 			() -> new FroglinEggBlock(
-				AbstractBlock.Properties.of(Material.WATER_PLANT)
+				BlockBehaviour.Properties.of(Material.WATER_PLANT)
 					.noOcclusion()
 					.noCollission()
 					.randomTicks()
@@ -138,19 +138,19 @@ public class Froglins
 					.sound(SoundType.SLIME_BLOCK)));
 		
 		this.froglinSpawnEggItem = items.register(Names.FROGLIN_SPAWN_EGG, () ->
-			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().tab(ItemGroup.TAB_MISC)));
+			new SpawnEggItem(this.froglin, 0x001e00, 0xbdcbd8, new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
 		
 		this.froglinEggItem = items.register(Names.FROGLIN_EGG, () ->
-			new BlockItem(this.froglinEggBlock.get(), new Item.Properties().tab(ItemGroup.TAB_BREWING)));
+			new BlockItem(this.froglinEggBlock.get(), new Item.Properties().tab(CreativeModeTab.TAB_BREWING)));
 		
 		RegistryObject<HealthinessEffect> healthinessEffect = effects.register(Names.HEALTHINESS, () ->
-			new HealthinessEffect(EffectType.BENEFICIAL, 0x032f00));
+			new HealthinessEffect(MobEffectCategory.BENEFICIAL, 0x032f00));
 		
 		this.froglinEyeItem = items.register(Names.FROGLIN_EYE, () ->
 			new Item(
 				new Item.Properties()
-					.tab(ItemGroup.TAB_BREWING)
-					.food(new Food.Builder()
+					.tab(CreativeModeTab.TAB_BREWING)
+					.food(new FoodProperties.Builder()
 						.fast()
 						.nutrition(1)
 						.saturationMod(0.1F)
@@ -160,18 +160,18 @@ public class Froglins
 		this.healthinessTonicItem = items.register(Names.HEALTHINESS_TONIC, () ->
 			new HealthinessTonicItem(
 				new Item.Properties()
-					.tab(ItemGroup.TAB_BREWING)
+					.tab(CreativeModeTab.TAB_BREWING)
 					.stacksTo(1)
 					.craftRemainder(Items.GLASS_BOTTLE)
 					.food(
-						new Food.Builder()
-							.effect(() -> new EffectInstance(healthinessEffect.get(), 1), 1F)
+						new FoodProperties.Builder()
+							.effect(() -> new MobEffectInstance(healthinessEffect.get(), 1), 1F)
 							.alwaysEat()
 							.build()
 							)));
 		
-		RegistryObject<Effect> frogsMightEffect = effects.register(Names.FROGS_MIGHT, () ->
-			new PublicEffect(EffectType.BENEFICIAL, 0xd4f6bc)
+		RegistryObject<MobEffect> frogsMightEffect = effects.register(Names.FROGS_MIGHT, () ->
+			new PublicEffect(MobEffectCategory.BENEFICIAL, 0xd4f6bc)
 				.addAttributeModifier(ForgeMod.SWIM_SPEED.get(), "1c2a2b4d-7c8e-473c-a6c3-d68af3d47704", 0.4F, AttributeModifier.Operation.MULTIPLY_TOTAL));
 		
 		// name args in Potion constructor is used for translation key
@@ -179,29 +179,29 @@ public class Froglins
 		String frogsMightTranslationKey = makePotionTranslationKey(Names.FROGS_MIGHT);
 		this.frogsMightPotion = potions.register(Names.FROGS_MIGHT, () ->
 			new Potion(frogsMightTranslationKey,
-				new EffectInstance(frogsMightEffect.get(), 3600)));
+				new MobEffectInstance(frogsMightEffect.get(), 3600)));
 		this.longFrogsMightPotion = potions.register(Names.LONG_FROGS_MIGHT, () ->
 			new Potion(frogsMightTranslationKey,
-				new EffectInstance(frogsMightEffect.get(), 9600)));
+				new MobEffectInstance(frogsMightEffect.get(), 9600)));
 		this.strongFrogsMightPotion = potions.register(Names.STRONG_FROGS_MIGHT, () ->
 			new Potion(frogsMightTranslationKey,
-				new EffectInstance(frogsMightEffect.get(), 1800, 1)));
+				new MobEffectInstance(frogsMightEffect.get(), 1800, 1)));
 		
 		String frogChampionTranslationKey = makePotionTranslationKey(Names.FROG_CHAMPION);
 		this.frogChampionPotion = potions.register(Names.FROG_CHAMPION, () ->
 			new Potion(frogChampionTranslationKey,
-				new EffectInstance(Effects.JUMP, 1800, 2),
-				new EffectInstance(frogsMightEffect.get(), 1800)));
+				new MobEffectInstance(MobEffects.JUMP, 1800, 2),
+				new MobEffectInstance(frogsMightEffect.get(), 1800)));
 		this.longFrogChampionPotion = potions.register(Names.LONG_FROG_CHAMPION, () ->
 			new Potion(frogChampionTranslationKey,
-				new EffectInstance(Effects.JUMP, 4800, 2),
-				new EffectInstance(frogsMightEffect.get(), 4800)));
+				new MobEffectInstance(MobEffects.JUMP, 4800, 2),
+				new MobEffectInstance(frogsMightEffect.get(), 4800)));
 		this.strongFrogChampionPotion = potions.register(Names.STRONG_FROG_CHAMPION, () ->
 			new Potion(frogChampionTranslationKey,
-				new EffectInstance(Effects.JUMP, 900, 3),
-				new EffectInstance(frogsMightEffect.get(), 900, 1)));
+				new MobEffectInstance(MobEffects.JUMP, 900, 3),
+				new MobEffectInstance(frogsMightEffect.get(), 900, 1)));
 		
-		paintings.register(Names.FROGLIN, () -> new PaintingType(32,32));
+		paintings.register(Names.FROGLIN, () -> new Motive(32,32));
 		
 		// manually register entity types
 		modBus.addGenericListener(EntityType.class, this::onRegisterEntityTypes);
@@ -238,8 +238,8 @@ public class Froglins
 	// stuff can safely be put into vanilla maps here
 	public void afterCommonSetup()
 	{
-		GlobalEntityTypeAttributes.put(this.froglin, FroglinEntity.createAttributes().build());
-		EntitySpawnPlacementRegistry.register(this.froglin, PlacementType.IN_WATER, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, FroglinEntity::canRandomlySpawn);
+		DefaultAttributes.put(this.froglin, FroglinEntity.createAttributes().build());
+		SpawnPlacements.register(this.froglin, Type.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, FroglinEntity::canRandomlySpawn);
 		
 		// add spawn egg behaviours to dispenser
 		DefaultDispenseItemBehavior spawnEggBehavior = new DefaultDispenseItemBehavior()
@@ -248,11 +248,11 @@ public class Froglins
 			 * Dispense the specified stack, play the dispense sound and spawn particles.
 			 */
 			@Override
-			public ItemStack execute(IBlockSource source, ItemStack stack)
+			public ItemStack execute(BlockSource source, ItemStack stack)
 			{
 				Direction direction = source.getBlockState().getValue(DispenserBlock.FACING);
 				EntityType<?> entitytype = ((SpawnEggItem) stack.getItem()).getType(stack.getTag());
-				entitytype.spawn(source.getLevel(), stack, (PlayerEntity) null, source.getPos().relative(direction), SpawnReason.DISPENSER, direction != Direction.UP, false);
+				entitytype.spawn(source.getLevel(), stack, (Player) null, source.getPos().relative(direction), MobSpawnType.DISPENSER, direction != Direction.UP, false);
 				stack.shrink(1);
 				return stack;
 			}
@@ -275,8 +275,8 @@ public class Froglins
 	
 	public void addThingsToBiomeOnBiomeLoad(BiomeLoadingEvent event)
 	{
-		RegistryKey<Biome> key = RegistryKey.create(Registry.BIOME_REGISTRY, event.getName());
-		List<Spawners> spawners = event.getSpawns().getSpawner(EntityClassification.MONSTER);
+		ResourceKey<Biome> key = ResourceKey.create(Registry.BIOME_REGISTRY, event.getName());
+		List<SpawnerData> spawners = event.getSpawns().getSpawner(MobCategory.MONSTER);
 		
 		for (FroglinSpawnEntry entry : this.commonConfig.spawns.get())
 		{

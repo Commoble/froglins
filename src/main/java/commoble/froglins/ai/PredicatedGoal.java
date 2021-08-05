@@ -3,10 +3,10 @@ package commoble.froglins.ai;
 import java.util.EnumSet;
 import java.util.function.Predicate;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
 
-import net.minecraft.entity.ai.goal.Goal.Flag;
+import net.minecraft.world.entity.ai.goal.Goal.Flag;
 
 /**
  * Wrapper class around another Goal that allows the delegated goal to start or continue executing

@@ -2,22 +2,22 @@ package commoble.froglins.client;
 
 import java.util.function.Function;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import commoble.froglins.FroglinEntity;
-import net.minecraft.client.renderer.entity.model.BipedModel;
-import net.minecraft.client.renderer.model.ModelHelper;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.entity.Pose;
-import net.minecraft.util.HandSide;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.AnimationUtils;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.util.Mth;
 
 // Made with Blockbench 3.6.6
 // Exported for Minecraft version 1.15
 // Paste this class into your mod and generate all required imports
 
-public class FroglinModel extends BipedModel<FroglinEntity>
+public class FroglinModel extends HumanoidModel<FroglinEntity>
 {
 	public static final FroglinModel BASE = new FroglinModel(0F);
 	public static final FroglinModel CROUCHED = new FroglinCrouchedModel(0f);
@@ -28,8 +28,8 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 //	private final ModelRenderer leftArmPivot;
 //	private final ModelRenderer rightThighPivot;
 //	private final ModelRenderer leftThighPivot;
-	private final ModelRenderer rightArmClaws;
-	private final ModelRenderer leftArmClaws;
+	private final ModelPart rightArmClaws;
+	private final ModelPart leftArmClaws;
 
 	public FroglinModel(float scale)
 	{
@@ -37,21 +37,21 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 //		this.textureWidth = 64;
 //		this.textureHeight = 64;
 
-		this.head = new ModelRenderer(this);
+		this.head = new ModelPart(this);
 		this.head.setPos(0.0F, 0.0F, 0.0F);
 		this.head.texOffs(0, 0).addBox(-3.0F, -4.0F, -6.0F, 6.0F, 6.0F, 8.0F, 0.01F, false);
 
-		this.body = new ModelRenderer(this);
+		this.body = new ModelPart(this);
 		this.body.setPos(0.0F, 2.0F, 0.0F);
 		this.setRotationAngle(this.body, 0.3491F, 0.0F, 0.0F);
 		this.body.texOffs(16, 16).addBox(-3.0F, 0.0F, -2.0F, 6.0F, 12.0F, 4.0F, 0.0F, false);
 
-		this.rightArm = new ModelRenderer(this);
+		this.rightArm = new ModelPart(this);
 		this.rightArm.setPos(-2.5F, 5.0F, 0.0F);
 		this.setRotationAngle(this.rightArm, -0.1745F, 0.0F, 0.0F);
 		this.rightArm.texOffs(40, 16).addBox(-1.0F, -1.0F, -2.0F, 2.0F, 9.0F, 3.0F, 0.0F, false);
 
-		this.rightArmClaws = new ModelRenderer(this);
+		this.rightArmClaws = new ModelPart(this);
 		this.rightArmClaws.setPos(2.5F, 18.0F, 5.0F);
 		this.rightArm.addChild(this.rightArmClaws);
 		this.setRotationAngle(this.rightArmClaws, 0.2618F, 0.0F, 0.0F);
@@ -59,12 +59,12 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 		this.rightArmClaws.texOffs(0, 0).addBox(-2.4F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
 		this.rightArmClaws.texOffs(0, 0).addBox(-3.3F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
 
-		this.leftArm = new ModelRenderer(this);
+		this.leftArm = new ModelPart(this);
 		this.leftArm.setPos(2.5F, 5.0F, 0.0F);
 		this.setRotationAngle(this.leftArm, -0.1745F, 0.0F, 0.0F);
 		this.leftArm.texOffs(40, 16).addBox(-1.0F, -1.0F, -2.0F, 2.0F, 9.0F, 3.0F, 0.0F, true);
 
-		this.leftArmClaws = new ModelRenderer(this);
+		this.leftArmClaws = new ModelPart(this);
 		this.leftArmClaws.setPos(2.5F, 18.0F, 5.0F);
 		this.leftArm.addChild(this.leftArmClaws);
 		this.setRotationAngle(this.leftArmClaws, 0.2618F, 0.0F, 0.0F);
@@ -72,11 +72,11 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 		this.leftArmClaws.texOffs(0, 0).addBox(-2.4F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
 		this.leftArmClaws.texOffs(0, 0).addBox(-3.3F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
 
-		this.rightLeg = new ModelRenderer(this);
+		this.rightLeg = new ModelPart(this);
 		this.rightLeg.setPos(-2.0F, 12.0F, 4.0F);
 		this.rightLeg.texOffs(0, 16).addBox(-2.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F, 0.0F, false);
 
-		this.leftLeg = new ModelRenderer(this);
+		this.leftLeg = new ModelPart(this);
 		this.leftLeg.setPos(2.0F, 12.0F, 4.0F);
 		this.leftLeg.texOffs(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F, 0.0F, true);
 
@@ -173,10 +173,10 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 			glideFactor = 1.0F;
 		}
 
-		this.rightArm.xRot += MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI) * 2.0F * limbSwingAmount * 0.5F / glideFactor;
-		this.leftArm.xRot += MathHelper.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F / glideFactor;
-		this.rightLeg.xRot = BASE.rightLeg.xRot + MathHelper.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount / glideFactor;
-		this.leftLeg.xRot = BASE.leftLeg.xRot + MathHelper.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.4F * limbSwingAmount / glideFactor;
+		this.rightArm.xRot += Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 2.0F * limbSwingAmount * 0.5F / glideFactor;
+		this.leftArm.xRot += Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F / glideFactor;
+		this.rightLeg.xRot = BASE.rightLeg.xRot + Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount / glideFactor;
+		this.leftLeg.xRot = BASE.leftLeg.xRot + Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.4F * limbSwingAmount / glideFactor;
 		if (this.riding)
 		{
 			this.rightArm.xRot += (-(float) Math.PI / 5F);
@@ -219,47 +219,47 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 //			this.bipedRightArm.rotationPointY = 5.2F;
 //		}
 
-		ModelHelper.bobArms(this.rightArm, this.leftArm, ageInTicks);
+		AnimationUtils.bobArms(this.rightArm, this.leftArm, ageInTicks);
 		if (this.swimAmount > 0.0F)
 		{
 			float limbSwingMod26 = limbSwing % 26.0F;
-			HandSide handside = this.getAttackArm(froglin);
-			float rightArmSwing = handside == HandSide.RIGHT && this.attackTime > 0.0F ? 0.0F : this.swimAmount;
-			float leftArmSwing = handside == HandSide.LEFT && this.attackTime > 0.0F ? 0.0F : this.swimAmount;
+			HumanoidArm handside = this.getAttackArm(froglin);
+			float rightArmSwing = handside == HumanoidArm.RIGHT && this.attackTime > 0.0F ? 0.0F : this.swimAmount;
+			float leftArmSwing = handside == HumanoidArm.LEFT && this.attackTime > 0.0F ? 0.0F : this.swimAmount;
 			if (limbSwingMod26 < 14.0F)
 			{
 				this.leftArm.xRot = this.rotlerpRad(leftArmSwing, this.leftArm.xRot, 0.0F);
-				this.rightArm.xRot = MathHelper.lerp(rightArmSwing, this.rightArm.xRot, 0.0F);
+				this.rightArm.xRot = Mth.lerp(rightArmSwing, this.rightArm.xRot, 0.0F);
 				this.leftArm.yRot = this.rotlerpRad(leftArmSwing, this.leftArm.yRot, (float) Math.PI);
-				this.rightArm.yRot = MathHelper.lerp(rightArmSwing, this.rightArm.yRot, (float) Math.PI);
+				this.rightArm.yRot = Mth.lerp(rightArmSwing, this.rightArm.yRot, (float) Math.PI);
 				this.leftArm.zRot = this.rotlerpRad(leftArmSwing, this.leftArm.zRot,
 					(float) Math.PI + 1.8707964F * this.getSwimArmAngleSquared(limbSwingMod26) / this.getSwimArmAngleSquared(14.0F));
-				this.rightArm.zRot = MathHelper.lerp(rightArmSwing, this.rightArm.zRot,
+				this.rightArm.zRot = Mth.lerp(rightArmSwing, this.rightArm.zRot,
 					(float) Math.PI - 1.8707964F * this.getSwimArmAngleSquared(limbSwingMod26) / this.getSwimArmAngleSquared(14.0F));
 			}
 			else if (limbSwingMod26 >= 14.0F && limbSwingMod26 < 22.0F)
 			{
 				float swingLerp = (limbSwingMod26 - 14.0F) / 8.0F;
 				this.leftArm.xRot = this.rotlerpRad(leftArmSwing, this.leftArm.xRot, ((float) Math.PI / 2F) * swingLerp);
-				this.rightArm.xRot = MathHelper.lerp(rightArmSwing, this.rightArm.xRot, ((float) Math.PI / 2F) * swingLerp);
+				this.rightArm.xRot = Mth.lerp(rightArmSwing, this.rightArm.xRot, ((float) Math.PI / 2F) * swingLerp);
 				this.leftArm.yRot = this.rotlerpRad(leftArmSwing, this.leftArm.yRot, (float) Math.PI);
-				this.rightArm.yRot = MathHelper.lerp(rightArmSwing, this.rightArm.yRot, (float) Math.PI);
+				this.rightArm.yRot = Mth.lerp(rightArmSwing, this.rightArm.yRot, (float) Math.PI);
 				this.leftArm.zRot = this.rotlerpRad(leftArmSwing, this.leftArm.zRot, 5.012389F - 1.8707964F * swingLerp);
-				this.rightArm.zRot = MathHelper.lerp(rightArmSwing, this.rightArm.zRot, 1.2707963F + 1.8707964F * swingLerp);
+				this.rightArm.zRot = Mth.lerp(rightArmSwing, this.rightArm.zRot, 1.2707963F + 1.8707964F * swingLerp);
 			}
 			else if (limbSwingMod26 >= 22.0F && limbSwingMod26 < 26.0F)
 			{
 				float swingLerp = (limbSwingMod26 - 22.0F) / 4.0F;
 				this.leftArm.xRot = this.rotlerpRad(leftArmSwing, this.leftArm.xRot, ((float) Math.PI / 2F) - ((float) Math.PI / 2F) * swingLerp);
-				this.rightArm.xRot = MathHelper.lerp(rightArmSwing, this.rightArm.xRot, ((float) Math.PI / 2F) - ((float) Math.PI / 2F) * swingLerp);
+				this.rightArm.xRot = Mth.lerp(rightArmSwing, this.rightArm.xRot, ((float) Math.PI / 2F) - ((float) Math.PI / 2F) * swingLerp);
 				this.leftArm.yRot = this.rotlerpRad(leftArmSwing, this.leftArm.yRot, (float) Math.PI);
-				this.rightArm.yRot = MathHelper.lerp(rightArmSwing, this.rightArm.yRot, (float) Math.PI);
+				this.rightArm.yRot = Mth.lerp(rightArmSwing, this.rightArm.yRot, (float) Math.PI);
 				this.leftArm.zRot = this.rotlerpRad(leftArmSwing, this.leftArm.zRot, (float) Math.PI);
-				this.rightArm.zRot = MathHelper.lerp(rightArmSwing, this.rightArm.zRot, (float) Math.PI);
+				this.rightArm.zRot = Mth.lerp(rightArmSwing, this.rightArm.zRot, (float) Math.PI);
 			}
 
-			this.leftLeg.xRot = MathHelper.lerp(this.swimAmount, this.leftLeg.xRot, 0.3F * MathHelper.cos(limbSwing * 0.33333334F + (float) Math.PI));
-			this.rightLeg.xRot = MathHelper.lerp(this.swimAmount, this.rightLeg.xRot, 0.3F * MathHelper.cos(limbSwing * 0.33333334F));
+			this.leftLeg.xRot = Mth.lerp(this.swimAmount, this.leftLeg.xRot, 0.3F * Mth.cos(limbSwing * 0.33333334F + (float) Math.PI));
+			this.rightLeg.xRot = Mth.lerp(this.swimAmount, this.rightLeg.xRot, 0.3F * Mth.cos(limbSwing * 0.33333334F));
 		}
 
 		this.hat.copyFrom(this.head);
@@ -271,11 +271,11 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 	{
 		if (!(this.attackTime <= 0.0F))
 		{
-			HandSide mainHand = this.getAttackArm(froglin);
-			ModelRenderer mainArmRenderer = this.getArm(mainHand);
+			HumanoidArm mainHand = this.getAttackArm(froglin);
+			ModelPart mainArmRenderer = this.getArm(mainHand);
 			float swingProgress = this.attackTime;
-			this.body.yRot = MathHelper.sin(MathHelper.sqrt(swingProgress) * ((float) Math.PI * 2F)) * 0.2F;
-			if (mainHand == HandSide.LEFT)
+			this.body.yRot = Mth.sin(Mth.sqrt(swingProgress) * ((float) Math.PI * 2F)) * 0.2F;
+			if (mainHand == HumanoidArm.LEFT)
 			{
 				this.body.yRot *= -1.0F;
 			}
@@ -290,16 +290,16 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 			swingProgress = 1.0F - this.attackTime;
 			swingProgress = swingProgress * swingProgress * swingProgress;
 			swingProgress = 1.0F - swingProgress;
-			float swingRadians = MathHelper.sin(swingProgress * (float) Math.PI);
-			float headRadians = MathHelper.sin(this.attackTime * (float) Math.PI) * -(this.head.xRot - 0.7F) * 0.75F;
+			float swingRadians = Mth.sin(swingProgress * (float) Math.PI);
+			float headRadians = Mth.sin(this.attackTime * (float) Math.PI) * -(this.head.xRot - 0.7F) * 0.75F;
 			mainArmRenderer.xRot = (float) (mainArmRenderer.xRot - (swingRadians * 1.2D + headRadians));
 			mainArmRenderer.yRot += this.body.yRot * 2.0F;
-			mainArmRenderer.zRot += MathHelper.sin(this.attackTime * (float) Math.PI) * -0.4F;
+			mainArmRenderer.zRot += Mth.sin(this.attackTime * (float) Math.PI) * -0.4F;
 		}
 	}
 	
 	@Override
-	public void renderToBuffer(MatrixStack matrixStack, IVertexBuilder buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha)
+	public void renderToBuffer(PoseStack matrixStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha)
 	{
 		this.head.render(matrixStack, buffer, packedLight, packedOverlay);
 		this.body.render(matrixStack, buffer, packedLight, packedOverlay);
@@ -309,14 +309,14 @@ public class FroglinModel extends BipedModel<FroglinEntity>
 		this.leftLeg.render(matrixStack, buffer, packedLight, packedOverlay);
 	}
 
-	public void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z)
+	public void setRotationAngle(ModelPart modelRenderer, float x, float y, float z)
 	{
 		modelRenderer.xRot = x;
 		modelRenderer.yRot = y;
 		modelRenderer.zRot = z;
 	}
 	
-	public void copyBaseBone(FroglinModel modelToCopyFrom, Function<FroglinModel, ModelRenderer> getter)
+	public void copyBaseBone(FroglinModel modelToCopyFrom, Function<FroglinModel, ModelPart> getter)
 	{
 		getter.apply(this).copyFrom(getter.apply(modelToCopyFrom));
 	}

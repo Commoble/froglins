@@ -3,11 +3,11 @@ package commoble.froglins.ai;
 import java.util.EnumSet;
 
 import commoble.froglins.FroglinEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.SwimGoal;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
 
-public class SwimToTargetGoal extends SwimGoal
+public class SwimToTargetGoal extends FloatGoal
 {
 	private final FroglinEntity froglin; 
 

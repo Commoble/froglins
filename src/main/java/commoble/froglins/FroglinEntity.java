@@ -10,46 +10,46 @@ import commoble.froglins.ai.MoveToWaterGoal;
 import commoble.froglins.ai.PredicatedGoal;
 import commoble.froglins.ai.SinkInWaterGoal;
 import commoble.froglins.ai.SwimToTargetGoal;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.CreatureAttribute;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.controller.MovementController;
-import net.minecraft.entity.ai.goal.HurtByTargetGoal;
-import net.minecraft.entity.ai.goal.LeapAtTargetGoal;
-import net.minecraft.entity.ai.goal.LookAtGoal;
-import net.minecraft.entity.ai.goal.LookRandomlyGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.NearestAttackableTargetGoal;
-import net.minecraft.entity.ai.goal.PanicGoal;
-import net.minecraft.entity.ai.goal.RandomWalkingGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.monster.MonsterEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTDynamicOps;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.MobType;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.LeapAtTargetGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.IServerWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome.RainType;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome.Precipitation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.common.ForgeMod;
 
-public class FroglinEntity extends MonsterEntity
+public class FroglinEntity extends Monster
 {
 	public static final String DATA = "FroglinData";
 	
@@ -60,7 +60,7 @@ public class FroglinEntity extends MonsterEntity
 	// i.e. *before* FroglinEntity's constructor
 	private MoveToWaterGoal moveToWaterGoal;
 
-	public FroglinEntity(EntityType<? extends FroglinEntity> type, World worldIn)
+	public FroglinEntity(EntityType<? extends FroglinEntity> type, Level worldIn)
 	{
 		super(type, worldIn);
 		this.moveControl = new FroglinMovementController(this);
@@ -68,24 +68,24 @@ public class FroglinEntity extends MonsterEntity
 	
 	////// Entity Properties //////
 
-	public static AttributeModifierMap.MutableAttribute createAttributes()
+	public static AttributeSupplier.Builder createAttributes()
 	{
 //		return MonsterEntity.createMonsterAttributes(); // standard attributes
-		return MonsterEntity.createMonsterAttributes()
+		return Monster.createMonsterAttributes()
 			.add(Attributes.FOLLOW_RANGE, 20.0D)	// zombies are 35, monster default is 16
 			.add(Attributes.MOVEMENT_SPEED, 0.3F)	// zombies are 0.23F, players are 0.7F?
 			.add(ForgeMod.SWIM_SPEED.get(), 1.5F)
 			.add(Attributes.ATTACK_DAMAGE, 4.0D);
 	}
 	
-	public static boolean canRandomlySpawn(EntityType<FroglinEntity> type, IServerWorld world, SpawnReason reason, BlockPos pos, Random rand)
+	public static boolean canRandomlySpawn(EntityType<FroglinEntity> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, Random rand)
 	{
 		int minY = world.getSeaLevel() - 5;
 		int y = pos.getY();
 		return world.getDifficulty() != Difficulty.PEACEFUL
 			&& y >= minY
-			&& MonsterEntity.isDarkEnoughToSpawn(world, pos, rand)
-			&& (reason == SpawnReason.SPAWNER || world.getBlockState(pos).getFluidState().is(FluidTags.WATER));
+			&& Monster.isDarkEnoughToSpawn(world, pos, rand)
+			&& (reason == MobSpawnType.SPAWNER || world.getBlockState(pos).getFluidState().is(FluidTags.WATER));
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public class FroglinEntity extends MonsterEntity
 		this.goalSelector.addGoal(2, new SwimToTargetGoal(this));	// JUMP
 //		this.goalSelector.addGoal(3, new SwimGoal(this));
 		this.goalSelector.addGoal(3, new PredicatedGoal<>(this,
-			new SwimGoal(this),
+			new FloatGoal(this),
 			FroglinEntity::wantsToHunt));	// JUMP
 		this.goalSelector.addGoal(3, new PredicatedGoal<>(this,
 			new PanicGoal(this, 2D),
@@ -111,9 +111,9 @@ public class FroglinEntity extends MonsterEntity
 			frog -> !frog.isInWater()));	// MOVE, JUMP
 		this.goalSelector.addGoal(5, new MeleeAttackGoal(this, 1D, false));	// MOVE, LOOK
 		this.goalSelector.addGoal(6, new JumpSometimesGoal(this));	// JUMP
-		this.goalSelector.addGoal(7, new RandomWalkingGoal(this, 1D, 4)); // MOVE
-		this.goalSelector.addGoal(8, new LookAtGoal(this, PlayerEntity.class, 8.0F));	// LOOK
-		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));	// MOVE, LOOK
+		this.goalSelector.addGoal(7, new RandomStrollGoal(this, 1D, 4)); // MOVE
+		this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));	// LOOK
+		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));	// MOVE, LOOK
 		
 		// TODO good idea but make sure they don't interfere with other ai (particularly hiding)
 //		this.goalSelector.addGoal(3, new AvoidEntityGoal<>(this, OcelotEntity.class, 6.0F, 1.0D, 1.2D));
@@ -124,13 +124,13 @@ public class FroglinEntity extends MonsterEntity
 			new HurtByTargetGoal(this).setAlertOthers(),
 			FroglinEntity::wantsToRetaliate));
 		this.targetSelector.addGoal(3, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, MobEntity.class, 20, false, false, entity -> Froglins.EDIBLE_FISH_TAG.contains(entity.getType())),
+			new NearestAttackableTargetGoal<>(this, Mob.class, 20, false, false, entity -> Froglins.EDIBLE_FISH_TAG.contains(entity.getType())),
 			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(4, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, MobEntity.class, 40, false, false, entity -> Froglins.EDIBLE_ANIMALS_TAG.contains(entity.getType())),
+			new NearestAttackableTargetGoal<>(this, Mob.class, 40, false, false, entity -> Froglins.EDIBLE_ANIMALS_TAG.contains(entity.getType())),
 			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(5, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, PlayerEntity.class, 100, false, false, null),
+			new NearestAttackableTargetGoal<>(this, Player.class, 100, false, false, null),
 			FroglinEntity::wantsToHunt));
 	}
 
@@ -148,7 +148,7 @@ public class FroglinEntity extends MonsterEntity
 	}
 
 	@Override
-	public float getStandingEyeHeight(Pose poseIn, EntitySize sizeIn)
+	public float getStandingEyeHeight(Pose poseIn, EntityDimensions sizeIn)
 	{
 		// returns size * 0.85
 		// for players, depends on pose
@@ -180,9 +180,9 @@ public class FroglinEntity extends MonsterEntity
 	}
 
 	@Override
-	public CreatureAttribute getMobType()
+	public MobType getMobType()
 	{
-		return CreatureAttribute.WATER;
+		return MobType.WATER;
 	}
 
 	@Override
@@ -195,7 +195,7 @@ public class FroglinEntity extends MonsterEntity
 	// normally this returns false if the entity is in water, or if the entity is touching another entity
 	// water mobs must override this to skip the water check
 	@Override
-	public boolean checkSpawnObstruction(IWorldReader worldIn)
+	public boolean checkSpawnObstruction(LevelReader worldIn)
 	{
 		return worldIn.isUnobstructed(this);
 	}
@@ -219,7 +219,7 @@ public class FroglinEntity extends MonsterEntity
 	}
 
 	@Override
-	public float getWalkTargetValue(BlockPos pos, IWorldReader world)
+	public float getWalkTargetValue(BlockPos pos, LevelReader world)
 	{
 		return this.wantsToHunt()
 			? this.getHuntingBlockPathWeight(pos, world)
@@ -292,7 +292,7 @@ public class FroglinEntity extends MonsterEntity
 
 	// called when this entity kills another entity
 	@Override
-	public void killed(ServerWorld world, LivingEntity killedEntity)
+	public void killed(ServerLevel world, LivingEntity killedEntity)
 	{
 		super.killed(world, killedEntity);
 		this.data.addFullness(Froglins.INSTANCE.serverConfig.froglinFullnessFromKill.get());
@@ -319,10 +319,10 @@ public class FroglinEntity extends MonsterEntity
 	
 	////// Syncing and Saving //////
 	@Override
-	public void addAdditionalSaveData(CompoundNBT compound)
+	public void addAdditionalSaveData(CompoundTag compound)
 	{
 		super.addAdditionalSaveData(compound);
-		FroglinData.CODEC.encodeStart(NBTDynamicOps.INSTANCE, this.data)
+		FroglinData.CODEC.encodeStart(NbtOps.INSTANCE, this.data)
 			.result()
 			.ifPresent(dataTag -> compound.put(DATA, dataTag));
 		;
@@ -332,10 +332,10 @@ public class FroglinEntity extends MonsterEntity
 	 * (abstract) Protected helper method to read subclass entity data from NBT.
 	 */
 	@Override
-	public void readAdditionalSaveData(CompoundNBT compound)
+	public void readAdditionalSaveData(CompoundTag compound)
 	{
 		super.readAdditionalSaveData(compound);
-		FroglinData.CODEC.parse(NBTDynamicOps.INSTANCE, compound.get(DATA))
+		FroglinData.CODEC.parse(NbtOps.INSTANCE, compound.get(DATA))
 			.result()
 			.ifPresent(readData -> this.data = readData);
 	}
@@ -344,13 +344,13 @@ public class FroglinEntity extends MonsterEntity
 
 	// note that nighttime spawning will use the hunting path weight
 	// this needs to ensure that any block we would want to spawn in (e.g. water) >= 0
-	public float getHuntingBlockPathWeight(BlockPos pos, IWorldReader world)
+	public float getHuntingBlockPathWeight(BlockPos pos, LevelReader world)
 	{
 		// prefer highlands, prefer far away places
 		return Math.min(0F, pos.getY()) * (float)pos.distSqr(this.blockPosition());
 	}
 	
-	public float getHidingBlockPathWeight(BlockPos pos, IWorldReader world)
+	public float getHidingBlockPathWeight(BlockPos pos, LevelReader world)
 	{
 		int base = world.getMaxBuildHeight() - pos.getY();	// prefer lowlands
 		if (world.getFluidState(pos).is(FluidTags.WATER))	// greatly prefer water
@@ -387,7 +387,7 @@ public class FroglinEntity extends MonsterEntity
 		return !this.level.isDay() || 
 			(this.level.isRaining() &&
 				this.level.getBiome(this.blockPosition())
-				.getPrecipitation() == RainType.RAIN);
+				.getPrecipitation() == Precipitation.RAIN);
 	}
 	
 	public boolean wantsToRetaliate()
@@ -445,7 +445,7 @@ public class FroglinEntity extends MonsterEntity
 	}
 	
 	// need some tweaks to water movement to assist with turning, like drowned
-	public static class FroglinMovementController extends MovementController
+	public static class FroglinMovementController extends MoveControl
 	{
 
 		private final FroglinEntity froglin;
@@ -460,7 +460,7 @@ public class FroglinEntity extends MonsterEntity
 		public void tick()
 		{
 			LivingEntity target = this.froglin.getTarget();
-			Vector3d velocity = this.froglin.getDeltaMovement();
+			Vec3 velocity = this.froglin.getDeltaMovement();
 			if (target != null)
 			{
 				if (this.froglin.isInWater())
@@ -476,9 +476,9 @@ public class FroglinEntity extends MonsterEntity
 						double dx = this.wantedX - this.froglin.getX();
 						double dy = this.wantedY - this.froglin.getY();
 						double dz = this.wantedZ - this.froglin.getZ();
-						double distance = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
+						double distance = Mth.sqrt(dx * dx + dy * dy + dz * dz);
 						dy = dy / distance;
-						float yawDegrees = (float) (MathHelper.atan2(dz, dx) * (180F / (float) Math.PI)) - 90.0F;
+						float yawDegrees = (float) (Mth.atan2(dz, dx) * (180F / (float) Math.PI)) - 90.0F;
 						this.froglin.yRot = this.rotlerp(this.froglin.yRot, yawDegrees, 90.0F);
 						this.froglin.yBodyRot = this.froglin.yRot;
 					}
@@ -491,7 +491,7 @@ public class FroglinEntity extends MonsterEntity
 					}
 					else
 					{
-						Vector3d offset = target.position().subtract(this.froglin.position()).normalize();
+						Vec3 offset = target.position().subtract(this.froglin.position()).normalize();
 						this.froglin.setDeltaMovement(velocity.x + 0.01D * offset.x, velocity.y, velocity.z + 0.01D * offset.z);
 					}
 				}

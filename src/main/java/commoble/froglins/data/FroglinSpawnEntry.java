@@ -10,9 +10,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import commoble.froglins.Froglins;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.MobSpawnInfo.Spawners;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData;
 
 public class FroglinSpawnEntry
 {
@@ -43,24 +43,24 @@ public class FroglinSpawnEntry
 		this.require = require;
 	}
 	
-	public void addToBiomeIfPermitted(RegistryKey<Biome> biome, List<Spawners> spawners)
+	public void addToBiomeIfPermitted(ResourceKey<Biome> biome, List<SpawnerData> spawners)
 	{
 		if (this.canBeAddedToBiome(biome))
 		{
-			spawners.add(new Spawners(Froglins.INSTANCE.froglin, this.weight, this.min, this.max));
+			spawners.add(new SpawnerData(Froglins.INSTANCE.froglin, this.weight, this.min, this.max));
 		}
 	}
 	
-	public boolean canBeAddedToBiome(RegistryKey<Biome> biome)
+	public boolean canBeAddedToBiome(ResourceKey<Biome> biome)
 	{
 		return this.cache.getAllowedBiomes().contains(biome);
 	}
 	
 	class Cache
 	{
-		private Set<RegistryKey<Biome>> cachedBiomesToSpawnIn = null;
+		private Set<ResourceKey<Biome>> cachedBiomesToSpawnIn = null;
 		
-		public Set<RegistryKey<Biome>> getAllowedBiomes()
+		public Set<ResourceKey<Biome>> getAllowedBiomes()
 		{
 			if (this.cachedBiomesToSpawnIn == null)
 			{
@@ -71,13 +71,13 @@ public class FroglinSpawnEntry
 	}
 	
 	@Nonnull
-	private static Set<RegistryKey<Biome>> makeUpdatedCache(FroglinSpawnEntry entry)
+	private static Set<ResourceKey<Biome>> makeUpdatedCache(FroglinSpawnEntry entry)
 	{
-		Set<RegistryKey<Biome>> excludes = entry.getExclude().getBiomes();
-		Set<RegistryKey<Biome>> requires = entry.getRequire().getBiomes();
-		Set<RegistryKey<Biome>> includes = entry.getInclude().getBiomes();
+		Set<ResourceKey<Biome>> excludes = entry.getExclude().getBiomes();
+		Set<ResourceKey<Biome>> requires = entry.getRequire().getBiomes();
+		Set<ResourceKey<Biome>> includes = entry.getInclude().getBiomes();
 		
-		Set<RegistryKey<Biome>> biomesToSpawnIn = includes.stream()
+		Set<ResourceKey<Biome>> biomesToSpawnIn = includes.stream()
 			.filter(biome -> !excludes.contains(biome))
 			.filter(biome -> requires.isEmpty() || requires.contains(biome))
 			.collect(Collectors.toSet());

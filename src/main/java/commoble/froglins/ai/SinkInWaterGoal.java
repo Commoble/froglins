@@ -5,12 +5,12 @@ import java.util.EnumSet;
 import commoble.froglins.FroglinEggBlock;
 import commoble.froglins.FroglinEntity;
 import commoble.froglins.Froglins;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
-import net.minecraft.entity.ai.goal.Goal.Flag;
+import net.minecraft.world.entity.ai.goal.Goal.Flag;
 
 public class SinkInWaterGoal extends Goal
 {
@@ -34,7 +34,7 @@ public class SinkInWaterGoal extends Goal
 	@Override
 	public void tick()
 	{
-		World world = this.froglin.level;
+		Level world = this.froglin.level;
 		if (world != null && !world.isClientSide)
 		{
 			
@@ -75,7 +75,7 @@ public class SinkInWaterGoal extends Goal
 		
 	}
 	
-	protected static void tryPlaceEgg(World world, FroglinEntity froglin)
+	protected static void tryPlaceEgg(Level world, FroglinEntity froglin)
 	{
 		BlockPos froglinPos = froglin.blockPosition();
 		

@@ -6,10 +6,10 @@ import java.util.Random;
 import javax.annotation.Nullable;
 
 import commoble.froglins.FroglinEntity;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 // this is mostly the private goal from DrownedEntity with some adjustments
 public class MoveToWaterGoal extends Goal
@@ -35,7 +35,7 @@ public class MoveToWaterGoal extends Goal
 	{
 		if (this.froglin.wantsToHide() && !this.froglin.isInWater())
 		{
-			Vector3d target = this.tryFindWater();
+			Vec3 target = this.tryFindWater();
 			if (target == null)
 			{
 				return false;
@@ -74,7 +74,7 @@ public class MoveToWaterGoal extends Goal
 	}
 
 	@Nullable
-	private Vector3d tryFindWater()
+	private Vec3 tryFindWater()
 	{
 		Random rand = this.froglin.getRandom();
 		BlockPos froglinPos = this.froglin.blockPosition();
@@ -84,7 +84,7 @@ public class MoveToWaterGoal extends Goal
 			BlockPos checkPos = froglinPos.offset(rand.nextInt(20) - 10, 2 - rand.nextInt(8), rand.nextInt(20) - 10);
 			if (this.froglin.level.getBlockState(checkPos).is(Blocks.WATER))
 			{
-				return Vector3d.atBottomCenterOf(checkPos);
+				return Vec3.atBottomCenterOf(checkPos);
 			}
 		}
 

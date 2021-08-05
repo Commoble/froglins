@@ -3,9 +3,9 @@ package commoble.froglins.ai;
 import java.util.EnumSet;
 
 import commoble.froglins.FroglinEntity;
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.Goal;
 
-import net.minecraft.entity.ai.goal.Goal.Flag;
+import net.minecraft.world.entity.ai.goal.Goal.Flag;
 
 public class JumpSometimesGoal extends Goal
 {

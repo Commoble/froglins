@@ -1,17 +1,17 @@
 package commoble.froglins;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.EffectType;
-import net.minecraft.potion.Effects;
-import net.minecraft.potion.InstantEffect;
-import net.minecraft.util.FoodStats;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.effect.InstantenousMobEffect;
+import net.minecraft.world.food.FoodData;
+import net.minecraft.util.Mth;
 
-public class HealthinessEffect extends InstantEffect
+public class HealthinessEffect extends InstantenousMobEffect
 {
 
-	public HealthinessEffect(EffectType type, int liquidColor)
+	public HealthinessEffect(MobEffectCategory type, int liquidColor)
 	{
 		super(type, liquidColor);
 	}
@@ -29,20 +29,20 @@ public class HealthinessEffect extends InstantEffect
 			
 			if (!entity.level.isClientSide())
 			{
-				entity.removeEffect(Effects.BLINDNESS);
-				entity.removeEffect(Effects.CONFUSION);
-				entity.removeEffect(Effects.POISON);
-				entity.removeEffect(Effects.HUNGER);
+				entity.removeEffect(MobEffects.BLINDNESS);
+				entity.removeEffect(MobEffects.CONFUSION);
+				entity.removeEffect(MobEffects.POISON);
+				entity.removeEffect(MobEffects.HUNGER);
 				
-				if (entity instanceof PlayerEntity)
+				if (entity instanceof Player)
 				{
-					PlayerEntity player = (PlayerEntity)entity;
-					FoodStats foodStats = player.getFoodData();
+					Player player = (Player)entity;
+					FoodData foodStats = player.getFoodData();
 					
 					int currentFood = foodStats.getFoodLevel();
 					int maxFood = 20;
 					double missingFood = maxFood - currentFood;
-					int foodRestored = MathHelper.floor(Math.sqrt(missingFood));
+					int foodRestored = Mth.floor(Math.sqrt(missingFood));
 					foodStats.eat(foodRestored, 0.0F);
 				}
 			}

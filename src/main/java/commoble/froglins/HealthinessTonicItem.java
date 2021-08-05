@@ -2,26 +2,26 @@ package commoble.froglins;
 
 import java.util.List;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.UseAction;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.UseAnim;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class HealthinessTonicItem extends Item
 {
-	public static final ITextComponent TOOLTIP_0 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_0").withStyle(s -> s.applyFormat(TextFormatting.GRAY));
-	public static final ITextComponent TOOLTIP_1 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_1").withStyle(s -> s.applyFormat(TextFormatting.GRAY));
-	public static final ITextComponent TOOLTIP_2 = new TranslationTextComponent("tooltip.froglins.tonic_of_healthiness_2").withStyle(s -> s.applyFormat(TextFormatting.GRAY));
+	public static final Component TOOLTIP_0 = new TranslatableComponent("tooltip.froglins.tonic_of_healthiness_0").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
+	public static final Component TOOLTIP_1 = new TranslatableComponent("tooltip.froglins.tonic_of_healthiness_1").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
+	public static final Component TOOLTIP_2 = new TranslatableComponent("tooltip.froglins.tonic_of_healthiness_2").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
 	
 	public HealthinessTonicItem(Properties properties)
 	{
@@ -29,16 +29,16 @@ public class HealthinessTonicItem extends Item
 	}
 
 	@Override
-	public UseAction getUseAnimation(ItemStack stack)
+	public UseAnim getUseAnimation(ItemStack stack)
 	{
-		return UseAction.DRINK;
+		return UseAnim.DRINK;
 	}
 
 	@Override
-	public ItemStack finishUsingItem(ItemStack stack, World world, LivingEntity entity)
+	public ItemStack finishUsingItem(ItemStack stack, Level world, LivingEntity entity)
 	{
 		super.finishUsingItem(stack, world, entity);
-		PlayerEntity player = entity instanceof PlayerEntity ? (PlayerEntity) entity : null;
+		Player player = entity instanceof Player ? (Player) entity : null;
 		
 		if (player == null || !player.abilities.instabuild)
 		{
@@ -58,7 +58,7 @@ public class HealthinessTonicItem extends Item
 
 	@Override
 	@OnlyIn(Dist.CLIENT)
-	public void appendHoverText(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn)
+	public void appendHoverText(ItemStack stack, Level worldIn, List<Component> tooltip, TooltipFlag flagIn)
 	{
 		super.appendHoverText(stack, worldIn, tooltip, flagIn);
 		tooltip.add(TOOLTIP_0);
