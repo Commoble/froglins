@@ -2,6 +2,7 @@ package commoble.froglins.client;
 
 import commoble.froglins.FroglinEntity;
 import commoble.froglins.Froglins;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -17,6 +18,8 @@ public class FroglinRenderer extends MobRenderer<FroglinEntity, FroglinModel>
 
 	public FroglinRenderer(EntityRendererProvider.Context p_174304_) {
 		super(p_174304_, new FroglinModel(p_174304_.bakeLayer(FROGLIN)), 0.5F);
+		FroglinModel.BASE = new FroglinModel(p_174304_.bakeLayer(FROGLIN));
+		FroglinModel.CROUCHED = new FroglinModel.FroglinCrouchedModel(p_174304_.bakeLayer(FROGLIN));
 	}
 
 //	public FroglinRenderer(EntityRenderDispatcher renderManagerIn)

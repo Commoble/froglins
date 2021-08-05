@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import commoble.froglins.FroglinEntity;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.AnimationUtils;
 import net.minecraft.client.model.VexModel;
@@ -21,6 +22,8 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 
+import static commoble.froglins.client.ClientEvents.FROGLIN;
+
 // Made with Blockbench 3.6.6
 // Exported for Minecraft version 1.15
 // Paste this class into your mod and generate all required imports
@@ -29,7 +32,10 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 
 	// new ColdSnapStabberModel<>(p_174304_.bakeLayer(COLDSNAPSTABBER)
 	//something similar to this may be the solution the crouched problem
+
+
 {
+	public static FroglinModel BASE;
 	public static FroglinModel CROUCHED;
 
 	static ModelPart constructorPart;
@@ -163,7 +169,7 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		PartDefinition partDefinition = meshDefinition.getRoot();
 		CubeDeformation cubeDeformation = new CubeDeformation(0.01f);
 		partDefinition.addOrReplaceChild("head", CubeListBuilder.create()
-				.texOffs(0,0).addBox(03, -4, -6, 6, 6, 8, cubeDeformation), PartPose.ZERO);
+				.texOffs(0,0).addBox(-3.0F, -4.0F, -6.0F, 6.0F, 6.0F, 8.0F, cubeDeformation), PartPose.ZERO);
 		partDefinition.addOrReplaceChild("hat", CubeListBuilder.create()
 				.texOffs(0, 0).addBox(-1, -1, -1, 0, 0, 0), PartPose.ZERO);
 		partDefinition.addOrReplaceChild("body", CubeListBuilder.create()
@@ -195,9 +201,7 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 	@Override
 	public void setupAnim(FroglinEntity froglin, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		//TODO reimplement crouched
-//		FroglinModel currentModel = froglin.getPose() == Pose.CROUCHING ? CROUCHED : BASE;
-		FroglinModel currentModel = this;
+		FroglinModel currentModel = froglin.getPose() == Pose.CROUCHING ? CROUCHED : BASE;
 		this.copyBaseBone(currentModel, model -> model.body);
 		this.copyBaseBone(currentModel, model -> model.head);
 		this.copyBaseBone(currentModel, model -> model.rightArm);

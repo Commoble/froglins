@@ -1,6 +1,7 @@
 package commoble.froglins.client;
 
 import commoble.froglins.Froglins;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -28,6 +29,7 @@ public class ClientEvents
 
 	public static void registerLayer(EntityRenderersEvent.RegisterLayerDefinitions event){
 		event.registerLayerDefinition(FROGLIN, FroglinModel::createLayer);
+
 	}
 
 	public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event){
