@@ -2,6 +2,8 @@ package commoble.froglins.client;
 
 import java.util.function.Function;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
@@ -49,6 +51,11 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 	private static final String LEFTARMCLAW = "leftarmclaw";
 	private final ModelPart rightArmClaws;
 	private final ModelPart leftArmClaws;
+
+	@Override
+	protected Iterable<ModelPart> bodyParts() {
+		return Iterables.concat(super.bodyParts(), ImmutableList.of(this.leftArmClaws));
+	}
 
 	public FroglinModel(ModelPart part)
 	{
@@ -185,7 +192,7 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		partDefinition.addOrReplaceChild(LEFTARMCLAW, CubeListBuilder.create()
 				.texOffs(0, 0).addBox(-1.6f, -12f, -3.5f, 0f, 4f, 1f)
 				.texOffs(0,0).addBox(-2.4f, -12f, -3.5f, 0f, 4f, 1f)
-				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.offsetAndRotation( 0, 0, 0,0.2618F, 0.0F, 0.0F));		partDefinition.addOrReplaceChild("right_leg", CubeListBuilder.create()
+				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.offsetAndRotation( 0, 10, 0,0.2618F, 0.0F, 0.0F));		partDefinition.addOrReplaceChild("right_leg", CubeListBuilder.create()
 				.texOffs(0, 16).addBox(-2.5f, 0f, -1f, 3f, 12f, 3f), PartPose.ZERO);
 		partDefinition.addOrReplaceChild("left_leg", CubeListBuilder.create()
 				.texOffs(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F), PartPose.ZERO);
@@ -380,7 +387,7 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		this.rightLeg.render(matrixStack, buffer, packedLight, packedOverlay);
 		this.leftLeg.render(matrixStack, buffer, packedLight, packedOverlay);
 		this.leftArmClaws.render(matrixStack, buffer, packedLight, packedOverlay);
-		this.rightArmClaws.render(matrixStack, buffer, packedLight, packedOverlay);
+//		this.rightArmClaws.render(matrixStack, buffer, packedLight, packedOverlay);
 
 	}
 
