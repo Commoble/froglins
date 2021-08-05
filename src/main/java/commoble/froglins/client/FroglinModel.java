@@ -8,78 +8,112 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import commoble.froglins.FroglinEntity;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.AnimationUtils;
+import net.minecraft.client.model.VexModel;
+import net.minecraft.client.model.geom.LayerDefinitions;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.alchemy.PotionBrewing;
 
 // Made with Blockbench 3.6.6
 // Exported for Minecraft version 1.15
 // Paste this class into your mod and generate all required imports
 
 public class FroglinModel extends HumanoidModel<FroglinEntity>
+
+	// new ColdSnapStabberModel<>(p_174304_.bakeLayer(COLDSNAPSTABBER)
+	//something similar to this may be the solution the crouched problem
 {
-	public static final FroglinModel BASE = new FroglinModel(0F);
-	public static final FroglinModel CROUCHED = new FroglinCrouchedModel(0f);
-	
+	public static FroglinModel CROUCHED;
+
+	static ModelPart constructorPart;
 //	private final ModelRenderer headPivot;
 //	private final ModelRenderer bodyPivot;
 //	private final ModelRenderer rightArmPivot;
 //	private final ModelRenderer leftArmPivot;
 //	private final ModelRenderer rightThighPivot;
 //	private final ModelRenderer leftThighPivot;
+	private static final String RIGHTARMCLAW = "rightarmclaw";
+	private static final String LEFTARMCLAW = "leftarmclaw";
 	private final ModelPart rightArmClaws;
 	private final ModelPart leftArmClaws;
 
-	public FroglinModel(float scale)
+	public FroglinModel(ModelPart part)
 	{
-		super(scale, 0F, 64, 64);
-//		this.textureWidth = 64;
-//		this.textureHeight = 64;
+		super(part);
+		this.rightArmClaws = part.getChild(RIGHTARMCLAW);
+		this.leftArmClaws = part.getChild(LEFTARMCLAW);
+		head.setPos(0, 0 ,0);
+		body.setPos(0.0F, 2.0F, 0.0F);
+		body.setRotation(0.3491F, 0.0F, 0.0F);
+		rightArm.setPos(-2.5F, 5.0F, 0.0F);
+		rightArm.setRotation(-0.1745F, 0.0F, 0.0F);
+		rightArmClaws.setPos(0, 23, 5);
+		rightArmClaws.setRotation( 0.0873F, 0.0F, 0.0F); //0.2618
 
-		this.head = new ModelPart(this);
-		this.head.setPos(0.0F, 0.0F, 0.0F);
-		this.head.texOffs(0, 0).addBox(-3.0F, -4.0F, -6.0F, 6.0F, 6.0F, 8.0F, 0.01F, false);
+		leftArm.setPos(2.5f, 5.0f, 0.0f);
+		leftArm.setRotation(-0.1745F, 0.0F, 0.0F);
+		leftArmClaws.setPos(5, 23, 5);
+		leftArmClaws.setRotation(0.0873F, 0.0F, 0.0F); //0.2618
+		rightLeg.setPos(-2, 12, 4);
+		leftLeg.setPos(2, 12, 4);
 
-		this.body = new ModelPart(this);
-		this.body.setPos(0.0F, 2.0F, 0.0F);
-		this.setRotationAngle(this.body, 0.3491F, 0.0F, 0.0F);
-		this.body.texOffs(16, 16).addBox(-3.0F, 0.0F, -2.0F, 6.0F, 12.0F, 4.0F, 0.0F, false);
+//		super(scale, 0F, 64, 64);
+////		this.textureWidth = 64;
+////		this.textureHeight = 64;
+//
+//		this.head = new ModelPart(this);
+//		this.head.setPos(0.0F, 0.0F, 0.0F);
+//		this.head.texOffs(0, 0).addBox(-3.0F, -4.0F, -6.0F, 6.0F, 6.0F, 8.0F, 0.01F, false);
+//
+//		this.body = new ModelPart(this);
+//		this.body.setPos(0.0F, 2.0F, 0.0F);
+//		this.setRotationAngle(this.body, 0.3491F, 0.0F, 0.0F);
+//		this.body.texOffs(16, 16).addBox(-3.0F, 0.0F, -2.0F, 6.0F, 12.0F, 4.0F, 0.0F, false);
+//
+//		this.rightArm = new ModelPart(this);
+//		this.rightArm.setPos(-2.5F, 5.0F, 0.0F);
+//		this.setRotationAngle(this.rightArm, -0.1745F, 0.0F, 0.0F);
+//		this.rightArm.texOffs(40, 16).addBox(-1.0F, -1.0F, -2.0F, 2.0F, 9.0F, 3.0F, 0.0F, false);
+//
+//		this.rightArmClaws = new ModelPart(this);
+//		this.rightArmClaws.setPos(2.5F, 18.0F, 5.0F);
+//		this.rightArm.addChild(this.rightArmClaws);
+//		this.setRotationAngle(this.rightArmClaws, 0.2618F, 0.0F, 0.0F);
+//		this.rightArmClaws.texOffs(0, 0).addBox(-1.6F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
+//		this.rightArmClaws.texOffs(0, 0).addBox(-2.4F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
+//		this.rightArmClaws.texOffs(0, 0).addBox(-3.3F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
+//
+//		this.leftArm = new ModelPart(this);
+//		this.leftArm.setPos(2.5F, 5.0F, 0.0F);
+//		this.setRotationAngle(this.leftArm, -0.1745F, 0.0F, 0.0F);
+//		this.leftArm.texOffs(40, 16).addBox(-1.0F, -1.0F, -2.0F, 2.0F, 9.0F, 3.0F, 0.0F, true);
+//
+//		this.leftArmClaws = new ModelPart(this);
+//		this.leftArmClaws.setPos(2.5F, 18.0F, 5.0F);
+//		this.leftArm.addChild(this.leftArmClaws);
+//		this.setRotationAngle(this.leftArmClaws, 0.2618F, 0.0F, 0.0F);
+//		this.leftArmClaws.texOffs(0, 0).addBox(-1.6F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
+//		this.leftArmClaws.texOffs(0, 0).addBox(-2.4F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
+//		this.leftArmClaws.texOffs(0, 0).addBox(-3.3F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
+//
+//		this.rightLeg = new ModelPart(this);
+//		this.rightLeg.setPos(-2.0F, 12.0F, 4.0F);
+//		this.rightLeg.texOffs(0, 16).addBox(-2.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F, 0.0F, false);
+//
+//		this.leftLeg = new ModelPart(this);
+//		this.leftLeg.setPos(2.0F, 12.0F, 4.0F);
+//		this.leftLeg.texOffs(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F, 0.0F, true);
 
-		this.rightArm = new ModelPart(this);
-		this.rightArm.setPos(-2.5F, 5.0F, 0.0F);
-		this.setRotationAngle(this.rightArm, -0.1745F, 0.0F, 0.0F);
-		this.rightArm.texOffs(40, 16).addBox(-1.0F, -1.0F, -2.0F, 2.0F, 9.0F, 3.0F, 0.0F, false);
 
-		this.rightArmClaws = new ModelPart(this);
-		this.rightArmClaws.setPos(2.5F, 18.0F, 5.0F);
-		this.rightArm.addChild(this.rightArmClaws);
-		this.setRotationAngle(this.rightArmClaws, 0.2618F, 0.0F, 0.0F);
-		this.rightArmClaws.texOffs(0, 0).addBox(-1.6F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
-		this.rightArmClaws.texOffs(0, 0).addBox(-2.4F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
-		this.rightArmClaws.texOffs(0, 0).addBox(-3.3F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
 
-		this.leftArm = new ModelPart(this);
-		this.leftArm.setPos(2.5F, 5.0F, 0.0F);
-		this.setRotationAngle(this.leftArm, -0.1745F, 0.0F, 0.0F);
-		this.leftArm.texOffs(40, 16).addBox(-1.0F, -1.0F, -2.0F, 2.0F, 9.0F, 3.0F, 0.0F, true);
-
-		this.leftArmClaws = new ModelPart(this);
-		this.leftArmClaws.setPos(2.5F, 18.0F, 5.0F);
-		this.leftArm.addChild(this.leftArmClaws);
-		this.setRotationAngle(this.leftArmClaws, 0.2618F, 0.0F, 0.0F);
-		this.leftArmClaws.texOffs(0, 0).addBox(-1.6F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
-		this.leftArmClaws.texOffs(0, 0).addBox(-2.4F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
-		this.leftArmClaws.texOffs(0, 0).addBox(-3.3F, -12.0F, -3.5F, 0.0F, 4.0F, 1.0F, 0.0F, false);
-
-		this.rightLeg = new ModelPart(this);
-		this.rightLeg.setPos(-2.0F, 12.0F, 4.0F);
-		this.rightLeg.texOffs(0, 16).addBox(-2.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F, 0.0F, false);
-
-		this.leftLeg = new ModelPart(this);
-		this.leftLeg.setPos(2.0F, 12.0F, 4.0F);
-		this.leftLeg.texOffs(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F, 0.0F, true);
-
+		//ORIGINAL COMMMENT OUT POINT
 //		this.headPivot = new ModelRenderer(this);
 //		this.headPivot.setRotationPoint(0.0F, 0.0F, 0.0F);
 //		this.headPivot.setTextureOffset(0, 0).addBox(-3.0F, -4.0F, -6.0F, 6.0F, 6.0F, 8.0F, 0.01F, false);
@@ -124,12 +158,46 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 //		this.leftThighPivot.setTextureOffset(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F, 0.0F, true);
 	}
 
+	public static LayerDefinition createLayer(){
+		MeshDefinition meshDefinition = new MeshDefinition();
+		PartDefinition partDefinition = meshDefinition.getRoot();
+		CubeDeformation cubeDeformation = new CubeDeformation(0.01f);
+		partDefinition.addOrReplaceChild("head", CubeListBuilder.create()
+				.texOffs(0,0).addBox(03, -4, -6, 6, 6, 8, cubeDeformation), PartPose.ZERO);
+		partDefinition.addOrReplaceChild("hat", CubeListBuilder.create()
+				.texOffs(0, 0).addBox(-1, -1, -1, 0, 0, 0), PartPose.ZERO);
+		partDefinition.addOrReplaceChild("body", CubeListBuilder.create()
+				.texOffs(16,16).addBox(-3, 0, -2, 6, 12, 4), PartPose.ZERO);
+		partDefinition.addOrReplaceChild("right_arm", CubeListBuilder.create()
+				.texOffs(40, 16).addBox(-1, -1, -2, 2, 9, 3), PartPose.ZERO);
+		partDefinition.addOrReplaceChild(RIGHTARMCLAW, CubeListBuilder.create()
+				.texOffs(0, 0).addBox(-1.6f, -12f, -3.5f, 0f, 4f, 1f)
+				.texOffs(0,0).addBox(-2.4f, -12f, -3.5f, 0f, 4f, 1f)
+				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.ZERO);
+		partDefinition.addOrReplaceChild("left_arm", CubeListBuilder.create()
+				.texOffs(40, 16).addBox(-1f, -1f, -2f, 2f, 9f, 3f), PartPose.ZERO);
+		partDefinition.addOrReplaceChild(LEFTARMCLAW, CubeListBuilder.create()
+				.texOffs(0, 0).addBox(-1.6f, -12f, -3.5f, 0f, 4f, 1f)
+				.texOffs(0,0).addBox(-2.4f, -12f, -3.5f, 0f, 4f, 1f)
+				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.ZERO);
+		partDefinition.addOrReplaceChild("right_leg", CubeListBuilder.create()
+				.texOffs(0, 16).addBox(-2.5f, 0f, -1f, 3f, 12f, 3f), PartPose.ZERO);
+		partDefinition.addOrReplaceChild("left_leg", CubeListBuilder.create()
+				.texOffs(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F), PartPose.ZERO);
+		return LayerDefinition.create(meshDefinition, 64, 64);
+
+
+	}
+
+
 	// the base method sets rotation points to specific positions, which we don't want
 	// so we have to override the *entire method*
 	@Override
 	public void setupAnim(FroglinEntity froglin, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch)
 	{
-		FroglinModel currentModel = froglin.getPose() == Pose.CROUCHING ? CROUCHED : BASE;
+		//TODO reimplement crouched
+//		FroglinModel currentModel = froglin.getPose() == Pose.CROUCHING ? CROUCHED : BASE;
+		FroglinModel currentModel = this;
 		this.copyBaseBone(currentModel, model -> model.body);
 		this.copyBaseBone(currentModel, model -> model.head);
 		this.copyBaseBone(currentModel, model -> model.rightArm);
@@ -175,8 +243,8 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 
 		this.rightArm.xRot += Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 2.0F * limbSwingAmount * 0.5F / glideFactor;
 		this.leftArm.xRot += Mth.cos(limbSwing * 0.6662F) * 2.0F * limbSwingAmount * 0.5F / glideFactor;
-		this.rightLeg.xRot = BASE.rightLeg.xRot + Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount / glideFactor;
-		this.leftLeg.xRot = BASE.leftLeg.xRot + Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.4F * limbSwingAmount / glideFactor;
+		this.rightLeg.xRot = this.rightLeg.xRot + Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount / glideFactor;
+		this.leftLeg.xRot = this.leftLeg.xRot + Mth.cos(limbSwing * 0.6662F + (float) Math.PI) * 1.4F * limbSwingAmount / glideFactor;
 		if (this.riding)
 		{
 			this.rightArm.xRot += (-(float) Math.PI / 5F);
@@ -330,9 +398,9 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 	public static class FroglinCrouchedModel extends FroglinModel
 	{
 
-		public FroglinCrouchedModel(float scale)
+		public FroglinCrouchedModel(ModelPart modelPart)
 		{
-			super(scale);
+			super(modelPart);
 
 			this.head.setPos(0.0F, 10.0F, 0.0F);
 			this.body.setPos(0.0F, 12.0F, 0.0F);
@@ -340,6 +408,11 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 			this.leftArm.setPos(2.5F, 15.0F, 0.0F);
 		}
 
+	}
+
+	private HumanoidArm getAttackArm(LivingEntity entity) {
+		HumanoidArm arm = entity.getMainArm();
+		return entity.swingingArm == InteractionHand.MAIN_HAND ? arm : arm.getOpposite();
 	}
 
 }
