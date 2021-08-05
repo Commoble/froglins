@@ -414,9 +414,4 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 
 	}
 
-	private HumanoidArm getAttackArm(LivingEntity entity) {
-		HumanoidArm arm = entity.getMainArm();
-		return entity.swingingArm == InteractionHand.MAIN_HAND ? arm : arm.getOpposite();
-	}
-
 }
