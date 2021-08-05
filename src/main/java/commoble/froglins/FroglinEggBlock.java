@@ -1,9 +1,13 @@
 package commoble.froglins;
 
+import java.util.Optional;
 import java.util.Random;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.Blocks;
@@ -209,19 +213,19 @@ public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockC
 		}
 	}
 
-	@Override
-	public Fluid takeLiquid(LevelAccessor worldIn, BlockPos pos, BlockState state)
-	{
-		if (state.getValue(WATERLOGGED))
-		{
-			worldIn.setBlock(pos, state.setValue(WATERLOGGED, false), Constants.BlockFlags.DEFAULT);
-			return Fluids.WATER;
-		}
-		else
-		{
-			return Fluids.EMPTY;
-		}
-	}
+//	@Override
+//	public Fluid takeLiquid(LevelAccessor worldIn, BlockPos pos, BlockState state)
+//	{
+//		if (state.getValue(WATERLOGGED))
+//		{
+//			worldIn.setBlock(pos, state.setValue(WATERLOGGED, false), Constants.BlockFlags.DEFAULT);
+//			return Fluids.WATER;
+//		}
+//		else
+//		{
+//			return Fluids.EMPTY;
+//		}
+//	}
 
 	@Override
 	@Deprecated
@@ -285,7 +289,23 @@ public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockC
 		}
 		
 	}
-	
-	
 
+
+	@Override
+	public ItemStack pickupBlock(LevelAccessor levelAccessor, BlockPos blockPos, BlockState blockState) {
+		if (blockState.getValue(WATERLOGGED))
+		{
+			levelAccessor.setBlock(blockPos, blockState.setValue(WATERLOGGED, false), Constants.BlockFlags.DEFAULT);
+			return Items.WATER_BUCKET.getDefaultInstance();
+		}
+		else
+		{
+			return Items.BUCKET.getDefaultInstance();
+		}
+	}
+
+	@Override
+	public Optional<SoundEvent> getPickupSound() {
+		return Optional.empty();
+	}
 }

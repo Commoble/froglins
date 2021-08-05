@@ -1,56 +1,45 @@
 package commoble.froglins;
 
-import java.util.List;
-import java.util.function.BiConsumer;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import commoble.froglins.client.ClientEvents;
 import commoble.froglins.data.FroglinSpawnEntry;
 import commoble.froglins.util.ConfigHelper;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.DispenserBlock;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.material.Material;
-import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
 import net.minecraft.core.BlockSource;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
+import net.minecraft.core.dispenser.DefaultDispenseItemBehavior;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.SpawnPlacements.Type;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.DefaultAttributes;
 import net.minecraft.world.entity.decoration.Motive;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.food.FoodProperties;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.EntityTypeTags;
-import net.minecraft.tags.Tag;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.core.Registry;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DispenserBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.common.MinecraftForge;
@@ -58,20 +47,26 @@ import net.minecraftforge.common.brewing.BrewingRecipe;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.common.crafting.NBTIngredient;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fmllegacy.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.IForgeRegistryEntry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.List;
+import java.util.function.BiConsumer;
 
 @Mod(Froglins.MODID)
 public class Froglins
@@ -123,8 +118,8 @@ public class Froglins
 		// create and register deferred registers
 		DeferredRegister<Block> blocks = registerRegister(modBus, ForgeRegistries.BLOCKS);
 		DeferredRegister<Item> items = registerRegister(modBus, ForgeRegistries.ITEMS);
-		DeferredRegister<MobEffect> effects = registerRegister(modBus, ForgeRegistries.POTIONS);
-		DeferredRegister<Potion> potions = registerRegister(modBus, ForgeRegistries.POTION_TYPES);
+		DeferredRegister<MobEffect> effects = registerRegister(modBus, ForgeRegistries.MOB_EFFECTS);
+		DeferredRegister<Potion> potions = registerRegister(modBus, ForgeRegistries.POTIONS);
 		DeferredRegister<Motive> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_TYPES);
 		
 		// register objects via deferred registers
@@ -208,6 +203,7 @@ public class Froglins
 		
 		// other event listeners
 		modBus.addListener(this::onCommonSetup);
+		modBus.addListener(this::onAttributeCreationEvent);
 		
 		forgeBus.addListener(EventPriority.HIGH, this::addThingsToBiomeOnBiomeLoad);
 
@@ -233,12 +229,13 @@ public class Froglins
 	{
 		event.enqueueWork(this::afterCommonSetup);
 	}
+	public void onAttributeCreationEvent(EntityAttributeCreationEvent event){event.put(this.froglin, FroglinEntity.createAttributes().build());}
 	
 	// runs on the main thread after common setup event
 	// stuff can safely be put into vanilla maps here
 	public void afterCommonSetup()
 	{
-		DefaultAttributes.put(this.froglin, FroglinEntity.createAttributes().build());
+
 		SpawnPlacements.register(this.froglin, Type.IN_WATER, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, FroglinEntity::canRandomlySpawn);
 		
 		// add spawn egg behaviours to dispenser

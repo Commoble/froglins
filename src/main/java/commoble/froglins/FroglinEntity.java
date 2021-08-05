@@ -476,11 +476,11 @@ public class FroglinEntity extends Monster
 						double dx = this.wantedX - this.froglin.getX();
 						double dy = this.wantedY - this.froglin.getY();
 						double dz = this.wantedZ - this.froglin.getZ();
-						double distance = Mth.sqrt(dx * dx + dy * dy + dz * dz);
+						double distance = Mth.sqrt((float) (dx * dx + dy * dy + dz * dz));
 						dy = dy / distance;
 						float yawDegrees = (float) (Mth.atan2(dz, dx) * (180F / (float) Math.PI)) - 90.0F;
-						this.froglin.yRot = this.rotlerp(this.froglin.yRot, yawDegrees, 90.0F);
-						this.froglin.yBodyRot = this.froglin.yRot;
+						this.froglin.setYRot(this.rotlerp(this.froglin.getYRot(), yawDegrees, 90.0F));
+						this.froglin.yBodyRot = this.froglin.getYRot();
 					}
 				}
 				else if (!this.froglin.isOnGround())

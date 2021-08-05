@@ -40,7 +40,7 @@ public class HealthinessTonicItem extends Item
 		super.finishUsingItem(stack, world, entity);
 		Player player = entity instanceof Player ? (Player) entity : null;
 		
-		if (player == null || !player.abilities.instabuild)
+		if (player == null || !player.getAbilities().instabuild)
 		{
 			if (stack.isEmpty())
 			{
@@ -49,7 +49,7 @@ public class HealthinessTonicItem extends Item
 
 			if (player != null)
 			{
-				player.inventory.add(this.getContainerItem(stack));
+				player.getInventory().add(this.getContainerItem(stack));
 			}
 		}
 
