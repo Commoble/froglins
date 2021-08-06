@@ -41,7 +41,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockContainer, BonemealableBlock
 {
 	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
-	public static final BooleanProperty PERSISTANT = BooleanProperty.create("persistant");
+	public static final BooleanProperty PERSISTENT = BooleanProperty.create("persistent");
 	public static final IntegerProperty HATCH_PROGRESS = BlockStateProperties.AGE_15;
 	
 	public static final VoxelShape SHAPE = Block.box(2D, 0D, 2D, 14D, 6D, 14D);
@@ -51,7 +51,7 @@ public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockC
 		super(properties);
 		BlockState defaultState = this.stateDefinition.any()
 			.setValue(WATERLOGGED, false)
-			.setValue(PERSISTANT, false)
+			.setValue(PERSISTENT, false)
 			.setValue(HATCH_PROGRESS, 0);
 		this.registerDefaultState(defaultState);
 	}
@@ -60,7 +60,7 @@ public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockC
 	protected void createBlockStateDefinition(Builder<Block, BlockState> builder)
 	{
 		super.createBlockStateDefinition(builder);
-		builder.add(WATERLOGGED, PERSISTANT, HATCH_PROGRESS);
+		builder.add(WATERLOGGED, PERSISTENT, HATCH_PROGRESS);
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockC
 		FluidState fluidState = context.getLevel().getFluidState(placePos);
 		BlockState stateToPlace = super.getStateForPlacement(context)
 			.setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER)
-			.setValue(PERSISTANT, Froglins.INSTANCE.serverConfig.playersPlacePersistantFroglinEggs.get());
+			.setValue(PERSISTENT, Froglins.INSTANCE.serverConfig.playersPlacePersistentFroglinEggs.get());
 		
 		if (this.canSurvive(stateToPlace, context.getLevel(), placePos))
 		{
@@ -160,7 +160,7 @@ public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockC
 	
 	protected void hatch(ServerLevel world, BlockPos pos, BlockState state, Random random)
 	{
-		boolean persistant = state.getValue(PERSISTANT);
+		boolean persistant = state.getValue(PERSISTENT);
 		world.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
 
 
@@ -181,7 +181,7 @@ public class FroglinEggBlock extends Block implements BucketPickup, LiquidBlockC
 	
 	public boolean areEnoughPlayersNearToHatch(EntityGetter world, BlockPos pos, BlockState state)
 	{
-		return state.getValue(PERSISTANT)
+		return state.getValue(PERSISTENT)
 			// the boolean arg at the end of getClosestPlayer *ignores* creative players if true
 			|| world.getNearestPlayer(pos.getX(), pos.getY(), pos.getZ(), MobCategory.MONSTER.getNoDespawnDistance(), false) != null;
 	}

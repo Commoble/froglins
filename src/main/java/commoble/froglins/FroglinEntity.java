@@ -409,7 +409,7 @@ public class FroglinEntity extends Monster
 
 	public boolean laysPersistantEggs()
 	{
-		return Froglins.INSTANCE.serverConfig.persistantFroglinsLayPersistantFroglinEggs.get() && this.isPersistenceRequired();
+		return Froglins.INSTANCE.serverConfig.persistentFroglinsLayPersistentFroglinEggs.get() && this.isPersistenceRequired();
 	}
 	
 	public static class FroglinData
