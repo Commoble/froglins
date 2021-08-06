@@ -60,20 +60,21 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 	public FroglinModel(ModelPart part)
 	{
 		super(part);
+
+
 		this.rightArmClaws = part.getChild(RIGHTARMCLAW);
+		rightArm.children.put(RIGHTARMCLAW, rightArmClaws);
 		this.leftArmClaws = part.getChild(LEFTARMCLAW);
+		leftArm .children.put(LEFTARMCLAW, leftArmClaws);
 		head.setPos(0, 0 ,0);
 		body.setPos(0.0F, 2.0F, 0.0F);
 		body.setRotation(0.3491F, 0.0F, 0.0F);
 		rightArm.setPos(-2.5F, 5.0F, 0.0F);
 		rightArm.setRotation(-0.1745F, 0.0F, 0.0F);
-		rightArmClaws.setPos(0, 23, 5);
-		rightArmClaws.setRotation( 0.0873F, 0.0F, 0.0F); //0.2618
+
 
 		leftArm.setPos(2.5f, 5.0f, 0.0f);
 		leftArm.setRotation(-0.1745F, 0.0F, 0.0F);
-//		leftArmClaws.setPos(5, 23, 5);
-//		leftArmClaws.setRotation(0.0873F, 0.0F, 0.0F); //0.2618
 		rightLeg.setPos(-2, 12, 4);
 		leftLeg.setPos(2, 12, 4);
 
@@ -186,13 +187,14 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		partDefinition.addOrReplaceChild(RIGHTARMCLAW, CubeListBuilder.create()
 				.texOffs(0, 0).addBox(-1.6f, -12f, -3.5f, 0f, 4f, 1f)
 				.texOffs(0,0).addBox(-2.4f, -12f, -3.5f, 0f, 4f, 1f)
-				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.ZERO);
+				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.offsetAndRotation( 2.5F, 18.0F, 5.0F,0.2618F, 0.0F, 0.0F));
 		partDefinition.addOrReplaceChild("left_arm", CubeListBuilder.create()
 				.texOffs(40, 16).addBox(-1f, -1f, -2f, 2f, 9f, 3f), PartPose.ZERO);
 		partDefinition.addOrReplaceChild(LEFTARMCLAW, CubeListBuilder.create()
 				.texOffs(0, 0).addBox(-1.6f, -12f, -3.5f, 0f, 4f, 1f)
 				.texOffs(0,0).addBox(-2.4f, -12f, -3.5f, 0f, 4f, 1f)
-				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.offsetAndRotation( 0, 10, 0,0.2618F, 0.0F, 0.0F));		partDefinition.addOrReplaceChild("right_leg", CubeListBuilder.create()
+				.texOffs(0,0).addBox(-3.3f, -12f, -3.5f, 0f, 4f, 1f), PartPose.offsetAndRotation( 2.5F, 18.0F, 5.0F,0.2618F, 0.0F, 0.0F));
+		partDefinition.addOrReplaceChild("right_leg", CubeListBuilder.create()
 				.texOffs(0, 16).addBox(-2.5f, 0f, -1f, 3f, 12f, 3f), PartPose.ZERO);
 		partDefinition.addOrReplaceChild("left_leg", CubeListBuilder.create()
 				.texOffs(0, 16).addBox(-0.5F, 0.0F, -1.0F, 3.0F, 12.0F, 3.0F), PartPose.ZERO);
@@ -214,7 +216,8 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		this.copyBaseBone(currentModel, model -> model.leftArm);
 		this.copyBaseBone(currentModel, model -> model.rightLeg);
 		this.copyBaseBone(currentModel, model -> model.leftLeg);
-		this.leftArmClaws.copyFrom(currentModel.leftArm);
+		currentModel.leftArmClaws.copyFrom(currentModel.leftArm);
+		currentModel.rightArmClaws.copyFrom(currentModel.rightArm);
 		
 		boolean hasBeenGliding = froglin.getFallFlyingTicks() > 4;
 		boolean isSwimming = froglin.isVisuallySwimming();
@@ -386,9 +389,6 @@ public class FroglinModel extends HumanoidModel<FroglinEntity>
 		this.leftArm.render(matrixStack, buffer, packedLight, packedOverlay);
 		this.rightLeg.render(matrixStack, buffer, packedLight, packedOverlay);
 		this.leftLeg.render(matrixStack, buffer, packedLight, packedOverlay);
-		this.leftArmClaws.render(matrixStack, buffer, packedLight, packedOverlay);
-//		this.rightArmClaws.render(matrixStack, buffer, packedLight, packedOverlay);
-
 	}
 
 	public void setRotationAngle(ModelPart modelRenderer, float x, float y, float z)
