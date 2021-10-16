@@ -14,4 +14,12 @@ public class Names
 	public static final String FROG_CHAMPION = "frog_champion";
 	public static final String LONG_FROG_CHAMPION = "long_frog_champion";
 	public static final String STRONG_FROG_CHAMPION = "strong_frog_champion";
+	
+	// sound events
+	public static final String FROGLIN_SOUND_AMBIENT = "entity.froglin.ambient";
+	public static final String FROGLIN_SOUND_ANGRY = "entity.froglin.angry";
+	public static final String FROGLIN_SOUND_ATTACK = "entity.froglin.attack";
+	public static final String FROGLIN_SOUND_DEATH = "entity.froglin.death";
+	public static final String FROGLIN_SOUND_HURT = "entity.froglin.hurt";
+	public static final String FROGLIN_SOUND_STEP = "entity.froglin.step";
 }

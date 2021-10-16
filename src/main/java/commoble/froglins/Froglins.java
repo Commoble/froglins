@@ -11,6 +11,7 @@ import commoble.froglins.util.ConfigHelper;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.Tag;
@@ -94,6 +95,14 @@ public class Froglins
 	public final RegistryObject<Potion> longFrogChampionPotion;
 	public final RegistryObject<Potion> strongFrogChampionPotion;
 	
+	public final RegistryObject<SoundEvent> froglinSoundAmbient;
+	public final RegistryObject<SoundEvent> froglinSoundAngry;
+	public final RegistryObject<SoundEvent> froglinSoundAttack;
+	public final RegistryObject<SoundEvent> froglinSoundDeath;
+	public final RegistryObject<SoundEvent> froglinSoundHurt;
+	public final RegistryObject<SoundEvent> froglinSoundStep;
+	
+	
 	public Froglins() // invoked by forge due to @Mod
 	{
 		INSTANCE = this;
@@ -116,6 +125,7 @@ public class Froglins
 		DeferredRegister<MobEffect> effects = registerRegister(modBus, ForgeRegistries.MOB_EFFECTS);
 		DeferredRegister<Potion> potions = registerRegister(modBus, ForgeRegistries.POTIONS);
 		DeferredRegister<Motive> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_TYPES);
+		DeferredRegister<SoundEvent> sounds = registerRegister(modBus, ForgeRegistries.SOUND_EVENTS);
 		
 		this.froglinEntityType = entityTypes.register(Names.FROGLIN, () ->
 			EntityType.Builder.of(FroglinEntity::new, MobCategory.MONSTER)
@@ -196,6 +206,13 @@ public class Froglins
 				new MobEffectInstance(frogsMightEffect.get(), 900, 1)));
 		
 		paintings.register(Names.FROGLIN, () -> new Motive(32,32));
+		
+		this.froglinSoundAmbient = registerSound(sounds, Names.FROGLIN_SOUND_AMBIENT);
+		this.froglinSoundAngry = registerSound(sounds, Names.FROGLIN_SOUND_ANGRY);
+		this.froglinSoundAttack = registerSound(sounds, Names.FROGLIN_SOUND_ATTACK);
+		this.froglinSoundDeath = registerSound(sounds, Names.FROGLIN_SOUND_DEATH);
+		this.froglinSoundHurt = registerSound(sounds, Names.FROGLIN_SOUND_HURT);
+		this.froglinSoundStep = registerSound(sounds, Names.FROGLIN_SOUND_STEP);
 		
 		// other event listeners
 		modBus.addListener(this::onRegisterAttributes);
@@ -288,5 +305,10 @@ public class Froglins
 		Ingredient catalystIngredient = Ingredient.of(catalyst);
 		ItemStack result = new ItemStack(output);
 		return new BrewingRecipe(inputPotionIngredient, catalystIngredient, result);
+	}
+	
+	private static RegistryObject<SoundEvent> registerSound(DeferredRegister<SoundEvent> sounds, String name)
+	{
+		return sounds.register(name, () -> new SoundEvent(new ResourceLocation(MODID, name)));
 	}
 }

@@ -1,0 +1,68 @@
+{
+	"entity.froglin.ambient":
+	{
+		"subtitle": "froglins.subtitles.entity.froglin.ambient",
+		"sounds":
+		[
+			{
+				"type": "event",
+				"name": "entity.zoglin.ambient"
+			}
+		]
+	},
+	"entity.froglin.angry":
+	{
+		"subtitle": "froglins.subtitles.entity.froglin.angry",
+		"sounds":
+		[
+			{
+				"type": "event",
+				"name": "entity.zoglin.angry"		
+			}
+		]
+	},
+	"entity.froglin.attack":
+	{
+		"subtitle": "froglins.subtitles.entity.froglin.attack",
+		"sounds":
+		[
+			{
+				"type": "event",
+				"name": "entity.zoglin.attack"		
+			}
+		]
+	},
+	"entity.froglin.death":
+	{
+		"subtitle": "froglins.subtitles.entity.froglin.death",
+		"sounds":
+		[
+			{
+				"type": "event",
+				"name": "entity.zoglin.death"
+			}
+		]
+	},
+	"entity.froglin.hurt":
+	{
+		"subtitle": "froglins.subtitles.entity.froglin.hurt",
+		"sounds":
+		[
+			{
+				"type": "event",
+				"name": "entity.zoglin.hurt"		
+			}
+		]
+	},
+	"entity.froglin.step":
+	{
+		"subtitle": "froglins.subtitles.entity.froglin.step",
+		"sounds":
+		[
+			{
+				"type": "event",
+				"name": "entity.zoglin.step"			
+			}
+		]
+	}
+}

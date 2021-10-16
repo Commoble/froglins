@@ -6,3 +6,4 @@
     * (You can find the common config file at yourminecraftfolder/config/froglins-common.toml)
     * As the common config file is shared by all save folders, this will prevent your config values from being reset each time you make a new world.
   * The config values persistant_froglins_lay_persistant_froglin_eggs and players_place_persistant_froglin_eggs have been renamed to persistent_froglins_lay_persistent_froglin_eggs and players_place_persistent_froglin_eggs respectively, as previously they were not spelled correctly.
+  * Froglins now have their own sound events. They still reuse vanilla sounds at the moment, but they can be overridden by resource packs.

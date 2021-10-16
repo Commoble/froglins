@@ -158,25 +158,25 @@ public class FroglinEntity extends Monster
 	@Override
 	protected SoundEvent getAmbientSound()
 	{
-		return SoundEvents.ZOGLIN_AMBIENT;
-	}
-
-	@Override
-	protected SoundEvent getHurtSound(DamageSource damageSourceIn)
-	{
-		return SoundEvents.ZOGLIN_HURT;
+		return Froglins.INSTANCE.froglinSoundAmbient.get();
 	}
 
 	@Override
 	protected SoundEvent getDeathSound()
 	{
-		return SoundEvents.ZOGLIN_DEATH;
+		return Froglins.INSTANCE.froglinSoundDeath.get();
+	}
+	
+	@Override
+	protected SoundEvent getHurtSound(DamageSource damageSourceIn)
+	{
+		return Froglins.INSTANCE.froglinSoundHurt.get();
 	}
 
 	@Override
 	protected void playStepSound(BlockPos pos, BlockState blockIn)
 	{
-		this.playSound(SoundEvents.ZOGLIN_STEP, 0.15F, 1.0F);
+		this.playSound(Froglins.INSTANCE.froglinSoundStep.get(), 0.15F, 1.0F);
 	}
 
 	@Override
@@ -407,7 +407,7 @@ public class FroglinEntity extends Monster
 		return this.data.getFullness() <= 0;
 	}
 
-	public boolean laysPersistantEggs()
+	public boolean laysPersistentEggs()
 	{
 		return Froglins.INSTANCE.serverConfig.persistentFroglinsLayPersistentFroglinEggs.get() && this.isPersistenceRequired();
 	}

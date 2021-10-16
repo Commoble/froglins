@@ -25,5 +25,11 @@
 	"froglins.advancements.nether.brew_frogs_might.title": "Frog's Might",
 	"froglins.advancements.nether.brew_frogs_might.description": "Brew a Potion of Frog's Might from a Froglin Egg",
 	"froglins.advancements.nether.brew_frog_champion.title": "Frog Champion",
-	"froglins.advancements.nether.brew_frog_champion.description": "Upgrade a Strong Potion of Leaping to a Potion of the Frog Champion with a Froglin Egg"
+	"froglins.advancements.nether.brew_frog_champion.description": "Upgrade a Strong Potion of Leaping to a Potion of the Frog Champion with a Froglin Egg",
+	"froglins.subtitles.entity.froglin.ambient": "Froglin growls",
+	"froglins.subtitles.entity.froglin.angry": "Froglin growls angrily",
+	"froglins.subtitles.entity.froglin.attack": "Froglin attacks",
+	"froglins.subtitles.entity.froglin.death": "Froglin croaks",
+	"froglins.subtitles.entity.froglin.hurt": "Froglin hurts",
+	"froglins.subtitles.entity.froglin.step": "Froglin steps"
 }

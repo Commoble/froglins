@@ -85,9 +85,10 @@ public class SinkInWaterGoal extends Goal
 		
 		if (eggBlock.isPositionValidAndInWater(world, froglinPos))
 		{
-			world.setBlockAndUpdate(froglinPos, eggBlock.defaultBlockState()
+			world.setBlock(froglinPos, eggBlock.defaultBlockState()
 				.setValue(FroglinEggBlock.WATERLOGGED, true)
-				.setValue(FroglinEggBlock.PERSISTANT, froglin.laysPersistantEggs()));
+				.setValue(FroglinEggBlock.PERSISTENT, froglin.laysPersistentEggs()),
+				11);
 			froglin.data.addEggs(-1);
 			return;
 		}
@@ -101,9 +102,10 @@ public class SinkInWaterGoal extends Goal
 		
 		if (eggBlock.isPositionValidAndInWater(world, checkPos))
 		{
-			world.setBlockAndUpdate(checkPos, eggBlock.defaultBlockState()
+			world.setBlock(checkPos, eggBlock.defaultBlockState()
 				.setValue(FroglinEggBlock.WATERLOGGED, true)
-				.setValue(FroglinEggBlock.PERSISTANT, froglin.laysPersistantEggs()));
+				.setValue(FroglinEggBlock.PERSISTENT, froglin.laysPersistentEggs()),
+				11);
 			froglin.data.addEggs(-1);
 		}
 	}
