@@ -10,8 +10,8 @@ public class ServerConfig
 	public final ConfigValueListener<Integer> froglinDigFrequency;
 	public final ConfigValueListener<Integer> froglinEggFrequency;
 	
-	public final ConfigValueListener<Boolean> persistantFroglinsLayPersistantFroglinEggs;
-	public final ConfigValueListener<Boolean> playersPlacePersistantFroglinEggs;
+	public final ConfigValueListener<Boolean> persistentFroglinsLayPersistentFroglinEggs;
+	public final ConfigValueListener<Boolean> playersPlacePersistentFroglinEggs;
 	
 	public ServerConfig(ForgeConfigSpec.Builder builder, ConfigHelper.Subscriber subscriber)
 	{
@@ -35,14 +35,14 @@ public class ServerConfig
 		
 		builder.push("Froglin Eggs");
 		
-		this.persistantFroglinsLayPersistantFroglinEggs = subscriber.subscribe(builder
-			.comment("Froglins marked as persistant will lay eggs that hatch into persistant froglins")
-			.translation("froglins.persistant_froglins_lay_persistant_froglin_eggs")
-			.define("persistant_froglins_lay_persistant_froglin_eggs", false));
-		this.playersPlacePersistantFroglinEggs = subscriber.subscribe(builder
-			.comment("Froglin eggs placed by players hatch into persistant froglins")
-			.translation("froglins.players_place_persistant_froglin_eggs")
-			.define("players_place_persistant_froglin_eggs", false));
+		this.persistentFroglinsLayPersistentFroglinEggs = subscriber.subscribe(builder
+			.comment("Froglins marked as persistent will lay eggs that hatch into persistent froglins")
+			.translation("froglins.persistent_froglins_lay_persistent_froglin_eggs")
+			.define("persistent_froglins_lay_persistent_froglin_eggs", false));
+		this.playersPlacePersistentFroglinEggs = subscriber.subscribe(builder
+			.comment("Froglin eggs placed by players hatch into persistent froglins")
+			.translation("froglins.players_place_persistent_froglin_eggs")
+			.define("players_place_persistent_froglin_eggs", false));
 		
 		builder.pop();
 	}

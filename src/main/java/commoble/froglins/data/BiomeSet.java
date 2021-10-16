@@ -14,11 +14,11 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.mojang.serialization.Codec;
 
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.ResourceLocationException;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.core.Registry;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
 
 public class BiomeSet
@@ -31,7 +31,7 @@ public class BiomeSet
 	
 
 	private final @Nonnull List<String> raws; public List<String> getRaws() {return this.raws;}
-	private @Nullable Set<RegistryKey<Biome>> biomes;
+	private @Nullable Set<ResourceKey<Biome>> biomes;
 	
 	public BiomeSet(@Nonnull List<String> raws)
 	{
@@ -39,7 +39,7 @@ public class BiomeSet
 	}
 	
 	@Nonnull
-	public Set<RegistryKey<Biome>> getBiomes()
+	public Set<ResourceKey<Biome>> getBiomes()
 	{
 		if (this.biomes == null)
 		{
@@ -48,16 +48,16 @@ public class BiomeSet
 		return this.biomes;
 	}
 	
-	static Set<RegistryKey<Biome>> getBiomePredicate(List<String> strings)
+	static Set<ResourceKey<Biome>> getBiomePredicate(List<String> strings)
 	{
-		Set<RegistryKey<Biome>> biomes = new HashSet<>();
+		Set<ResourceKey<Biome>> biomes = new HashSet<>();
 		for (String s : strings)
 		{
 			String biomeDictKey = s.toUpperCase();
 			if (biomeDictKey.equals(s)) // valid biomedict format
 			{
 				BiomeDictionary.Type type = BiomeDictionary.Type.getType(biomeDictKey);
-				Set<RegistryKey<Biome>> biomeDictBiomes = BiomeDictionary.getBiomes(type);
+				Set<ResourceKey<Biome>> biomeDictBiomes = BiomeDictionary.getBiomes(type);
 				if (biomeDictBiomes.isEmpty())
 				{
 					LOGGER.error("Error parsing froglin spawn configs: No biomes registered to biomedict key {}", biomeDictKey);
@@ -72,7 +72,7 @@ public class BiomeSet
 				try
 				{
 					ResourceLocation biomeLocation = new ResourceLocation(s); // can throw RL exception
-					biomes.add(RegistryKey.getOrCreateKey(Registry.BIOME_KEY, biomeLocation));
+					biomes.add(ResourceKey.create(Registry.BIOME_REGISTRY, biomeLocation));
 				}
 				catch(ResourceLocationException e)
 				{
@@ -83,10 +83,10 @@ public class BiomeSet
 		return biomes;
 	}
 		
-	static List<String> getBiomeNames(Set<RegistryKey<Biome>> biomes)
+	static List<String> getBiomeNames(Set<ResourceKey<Biome>> biomes)
 	{
 		return biomes.stream()
-			.map(key -> key.getLocation().toString())
+			.map(key -> key.location().toString())
 			.collect(Collectors.toList());
 	}
 }

@@ -4,69 +4,66 @@ import java.util.Random;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.IBucketPickupHandler;
-import net.minecraft.block.IGrowable;
-import net.minecraft.block.ILiquidContainer;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.IntegerProperty;
-import net.minecraft.state.StateContainer.Builder;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.shapes.ISelectionContext;
-import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.world.IBlockReader;
-import net.minecraft.world.IEntityReader;
-import net.minecraft.world.IWorld;
-import net.minecraft.world.IWorldReader;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.util.Constants;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.EntityGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BonemealableBlock;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition.Builder;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class FroglinEggBlock extends Block implements IBucketPickupHandler, ILiquidContainer, IGrowable
+public class FroglinEggBlock extends Block implements SimpleWaterloggedBlock, BonemealableBlock
 {
 	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
-	public static final BooleanProperty PERSISTANT = BooleanProperty.create("persistant");
-	public static final IntegerProperty HATCH_PROGRESS = BlockStateProperties.AGE_0_15;
+	public static final BooleanProperty PERSISTANT = BooleanProperty.create("persistent");
+	public static final IntegerProperty HATCH_PROGRESS = BlockStateProperties.AGE_15;
 	
-	public static final VoxelShape SHAPE = Block.makeCuboidShape(2D, 0D, 2D, 14D, 6D, 14D);
+	public static final VoxelShape SHAPE = Block.box(2D, 0D, 2D, 14D, 6D, 14D);
 
 	public FroglinEggBlock(Properties properties)
 	{
 		super(properties);
-		BlockState defaultState = this.stateContainer.getBaseState()
-			.with(WATERLOGGED, false)
-			.with(PERSISTANT, false)
-			.with(HATCH_PROGRESS, 0);
-		this.setDefaultState(defaultState);
+		BlockState defaultState = this.stateDefinition.any()
+			.setValue(WATERLOGGED, false)
+			.setValue(PERSISTANT, false)
+			.setValue(HATCH_PROGRESS, 0);
+		this.registerDefaultState(defaultState);
 	}
 
 	@Override
-	protected void fillStateContainer(Builder<Block, BlockState> builder)
+	protected void createBlockStateDefinition(Builder<Block, BlockState> builder)
 	{
-		super.fillStateContainer(builder);
+		super.createBlockStateDefinition(builder);
 		builder.add(WATERLOGGED, PERSISTANT, HATCH_PROGRESS);
 	}
 
 	@Override
 	@Nullable
-	public BlockState getStateForPlacement(BlockItemUseContext context)
+	public BlockState getStateForPlacement(BlockPlaceContext context)
 	{
-		BlockPos placePos = context.getPos();
-		FluidState fluidState = context.getWorld().getFluidState(placePos);
+		BlockPos placePos = context.getClickedPos();
+		FluidState fluidState = context.getLevel().getFluidState(placePos);
 		BlockState stateToPlace = super.getStateForPlacement(context)
-			.with(WATERLOGGED, fluidState.getFluid() == Fluids.WATER)
-			.with(PERSISTANT, Froglins.INSTANCE.serverConfig.playersPlacePersistantFroglinEggs.get());
+			.setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER)
+			.setValue(PERSISTANT, Froglins.INSTANCE.serverConfig.playersPlacePersistentFroglinEggs.get());
 		
-		if (this.isValidPosition(stateToPlace, context.getWorld(), placePos))
+		if (this.canSurvive(stateToPlace, context.getLevel(), placePos))
 		{
 			return stateToPlace;
 		}
@@ -77,46 +74,46 @@ public class FroglinEggBlock extends Block implements IBucketPickupHandler, ILiq
 	}
 
 	@Override
-	public boolean isValidPosition(BlockState state, IWorldReader worldIn, BlockPos pos)
+	public boolean canSurvive(BlockState state, LevelReader worldIn, BlockPos pos)
 	{
-		BlockPos belowPos = pos.down();
+		BlockPos belowPos = pos.below();
 		return this.isValidGround(worldIn.getBlockState(belowPos), worldIn, belowPos);
 	}
 
-	protected boolean isValidGround(BlockState belowState, IBlockReader worldIn, BlockPos belowPos)
+	protected boolean isValidGround(BlockState belowState, BlockGetter worldIn, BlockPos belowPos)
 	{
-		return belowState.isOpaqueCube(worldIn, belowPos);
+		return belowState.isSolidRender(worldIn, belowPos);
 	}
 	
-	public boolean isPositionValidAndInWater(IWorldReader world, BlockPos pos)
+	public boolean isPositionValidAndInWater(LevelReader world, BlockPos pos)
 	{
-		return world.hasWater(pos)
+		return world.isWaterAt(pos)
 			&& world.getBlockState(pos).getMaterial().isReplaceable()
-			&& this.isValidPosition(this.getDefaultState(), world, pos);
+			&& this.canSurvive(this.defaultBlockState(), world, pos);
 	}
 
 	@Override
-	public BlockState updatePostPlacement(BlockState stateIn, Direction facing, BlockState facingState, IWorld worldIn, BlockPos currentPos, BlockPos facingPos)
+	public BlockState updateShape(BlockState stateIn, Direction facing, BlockState facingState, LevelAccessor worldIn, BlockPos currentPos, BlockPos facingPos)
 	{
-		if (!stateIn.isValidPosition(worldIn, currentPos))
+		if (!stateIn.canSurvive(worldIn, currentPos))
 		{
-			return Blocks.AIR.getDefaultState();
+			return Blocks.AIR.defaultBlockState();
 		}
 		else
 		{
-			if (stateIn.get(WATERLOGGED))
+			if (stateIn.getValue(WATERLOGGED))
 			{
-				worldIn.getPendingFluidTicks().scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickRate(worldIn));
+				worldIn.getLiquidTicks().scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(worldIn));
 			}
 
 			@SuppressWarnings("deprecation")
-			BlockState result = super.updatePostPlacement(stateIn, facing, facingState, worldIn, currentPos, facingPos);
+			BlockState result = super.updateShape(stateIn, facing, facingState, worldIn, currentPos, facingPos);
 			return result;
 		}
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context)
+	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context)
 	{
 		return SHAPE;
 	}
@@ -128,20 +125,20 @@ public class FroglinEggBlock extends Block implements IBucketPickupHandler, ILiq
 	}
 	
 	@Override
-	public void randomTick(BlockState state, ServerWorld world, BlockPos pos, Random random)
+	public void randomTick(BlockState state, ServerLevel world, BlockPos pos, Random random)
 	{
 		// make sure this block is correct
-		if (state.isIn(Froglins.INSTANCE.froglinEggBlock.get()))
+		if (state.is(Froglins.INSTANCE.froglinEggBlock.get()))
 		{
-			int progress = state.get(HATCH_PROGRESS);
+			int progress = state.getValue(HATCH_PROGRESS);
 			if (this.canGrowProgressAtPosition(world, pos, state))
 			{
-				BlockPos abovePos = pos.up();
+				BlockPos abovePos = pos.above();
 				if (progress < 15) // not hatchable yet
 				{
-					world.setBlockState(pos, state.with(HATCH_PROGRESS, progress+1));
+					world.setBlockAndUpdate(pos, state.setValue(HATCH_PROGRESS, progress+1));
 				}
-				else if (!world.isDaytime()
+				else if (!world.isDay()
 					&& world.getBlockState(abovePos).getCollisionShape(world, abovePos).isEmpty()
 					&& this.areEnoughPlayersNearToHatch(world, pos, state))
 				{
@@ -151,106 +148,56 @@ public class FroglinEggBlock extends Block implements IBucketPickupHandler, ILiq
 		}
 	}
 	
-	protected void hatch(ServerWorld world, BlockPos pos, BlockState state, Random random)
+	protected void hatch(ServerLevel world, BlockPos pos, BlockState state, Random random)
 	{
-		boolean persistant = state.get(PERSISTANT);
-		world.setBlockState(pos, Blocks.WATER.getDefaultState());
+		boolean persistant = state.getValue(PERSISTANT);
+		world.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
 
 
-       FroglinEntity froglin = Froglins.INSTANCE.froglin.create(world);
-       froglin.setLocationAndAngles(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, random.nextFloat() * 360F, 0.0F);
+       FroglinEntity froglin = Froglins.INSTANCE.froglinEntityType.get().create(world);
+       froglin.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, random.nextFloat() * 360F, 0.0F);
        if (persistant)
        {
-    	   froglin.enablePersistence();
+    	   froglin.setPersistenceRequired();
        }
-       world.addEntity(froglin);
+       world.addFreshEntity(froglin);
 	}
 
-	public boolean canGrowProgressAtPosition(IWorld world, BlockPos pos, BlockState state)
+	public boolean canGrowProgressAtPosition(LevelAccessor world, BlockPos pos, BlockState state)
 	{
-		return world.getFluidState(pos).getFluid() == Fluids.WATER
-			&& this.isValidPosition(state, world, pos);
+		return world.getFluidState(pos).getType() == Fluids.WATER
+			&& this.canSurvive(state, world, pos);
 	}
 	
-	public boolean areEnoughPlayersNearToHatch(IEntityReader world, BlockPos pos, BlockState state)
+	public boolean areEnoughPlayersNearToHatch(EntityGetter world, BlockPos pos, BlockState state)
 	{
-		return state.get(PERSISTANT)
+		return state.getValue(PERSISTANT)
 			// the boolean arg at the end of getClosestPlayer *ignores* creative players if true
-			|| world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), EntityClassification.MONSTER.getRandomDespawnDistance(), false) != null;
+			|| world.getNearestPlayer(pos.getX(), pos.getY(), pos.getZ(), MobCategory.MONSTER.getNoDespawnDistance(), false) != null;
 	}
-
-	// fluid crunk
-
-	@Override
-	public boolean canContainFluid(IBlockReader worldIn, BlockPos pos, BlockState state, Fluid fluidIn)
-	{
-		return !state.get(WATERLOGGED) && fluidIn == Fluids.WATER;
-	}
-
-	@Override
-	public boolean receiveFluid(IWorld worldIn, BlockPos pos, BlockState state, FluidState fluidStateIn)
-	{
-		if (!state.get(WATERLOGGED) && fluidStateIn.getFluid() == Fluids.WATER)
-		{
-			if (!worldIn.isRemote())
-			{
-				worldIn.setBlockState(pos, state.with(WATERLOGGED, true), Constants.BlockFlags.DEFAULT);
-				worldIn.getPendingFluidTicks().scheduleTick(pos, fluidStateIn.getFluid(), fluidStateIn.getFluid().getTickRate(worldIn));
-			}
-
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-
-	@Override
-	public Fluid pickupFluid(IWorld worldIn, BlockPos pos, BlockState state)
-	{
-		if (state.get(WATERLOGGED))
-		{
-			worldIn.setBlockState(pos, state.with(WATERLOGGED, false), Constants.BlockFlags.DEFAULT);
-			return Fluids.WATER;
-		}
-		else
-		{
-			return Fluids.EMPTY;
-		}
-	}
-
-	@Override
-	@Deprecated
-	public FluidState getFluidState(BlockState state)
-	{
-		return state.get(WATERLOGGED) ? Fluids.WATER.getStillFluidState(false) : super.getFluidState(state);
-	}
-	
-	// bonemeal crunk
 
 	// called first, on both server/client
 	// if this returns true, bonemeal stack will shrink and animation will play
 	@Override
-	public boolean canGrow(IBlockReader world, BlockPos pos, BlockState state, boolean isClient)
+	public boolean isValidBonemealTarget(BlockGetter world, BlockPos pos, BlockState state, boolean isClient)
 	{
-		return world instanceof World && this.canDefinitelyUseBonemeal((World)world, pos, state);
+		return world instanceof Level && this.canDefinitelyUseBonemeal((Level)world, pos, state);
 	}
 
 	// called immediately after canGrow, only on servers
 	// if this returns true, grow will be called
 	@Override
-	public boolean canUseBonemeal(World world, Random rand, BlockPos pos, BlockState state)
+	public boolean isBonemealSuccess(Level world, Random rand, BlockPos pos, BlockState state)
 	{
 		return this.canDefinitelyUseBonemeal(world, pos, state);
 	}
 	
-	protected boolean canDefinitelyUseBonemeal(World world, BlockPos pos, BlockState state)
+	protected boolean canDefinitelyUseBonemeal(Level world, BlockPos pos, BlockState state)
 	{
 		// make sure this block is correct
-		if (state.isIn(Froglins.INSTANCE.froglinEggBlock.get()))
+		if (state.is(Froglins.INSTANCE.froglinEggBlock.get()))
 		{
-			BlockPos abovePos = pos.up();
+			BlockPos abovePos = pos.above();
 			return this.canGrowProgressAtPosition(world, pos, state)
 				&& world.getBlockState(abovePos).getCollisionShape(world, abovePos).isEmpty();
 		}
@@ -262,9 +209,9 @@ public class FroglinEggBlock extends Block implements IBucketPickupHandler, ILiq
 
 	// called when canUseBonemeal returns true on server
 	@Override
-	public void grow(ServerWorld world, Random rand, BlockPos pos, BlockState state)
+	public void performBonemeal(ServerLevel world, Random rand, BlockPos pos, BlockState state)
 	{
-		int progress = state.get(HATCH_PROGRESS);
+		int progress = state.getValue(HATCH_PROGRESS);
 		int progressRemaining = 15 - progress;
 		if (progressRemaining > 0) // not time to hatch yet
 		{
@@ -274,7 +221,7 @@ public class FroglinEggBlock extends Block implements IBucketPickupHandler, ILiq
 			// so we need to call nextInt(2)
 			// which is progressRemaining+1
 			int progressIncrease = rand.nextInt(progressRemaining+1);
-			world.setBlockState(pos, state.with(HATCH_PROGRESS, progress + progressIncrease));
+			world.setBlockAndUpdate(pos, state.setValue(HATCH_PROGRESS, progress + progressIncrease));
 		}
 		else
 		{
