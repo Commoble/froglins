@@ -1,3 +1,6 @@
+## 1.17.1-2.0.0.1
+* Fixed invalid criteria in some advancements causing them to be awarded immediately (affects brew_tonic and froglin_rancher)
+
 ## 1.17.1-2.0.0.0
 * Updated to 1.17.1. This update to froglins makes some changes to the way data is saved; if you try to update a save from 1.16.5 or older to this version, your save may not work properly.
 * The "persistant" blockstate property in froglin egg blocks has been renamed to "persistent", as it was previously not spelled correctly.
