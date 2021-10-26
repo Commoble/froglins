@@ -29,7 +29,7 @@
 				"items": 
 				[
 					{
-						"item": "froglins:froglin_egg"
+						"items": ["froglins:froglin_egg"]
 					}
 				]
 			}

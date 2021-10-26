@@ -29,7 +29,7 @@
 				"items": 
 				[
 					{
-						"item": "froglins:healthiness_tonic"
+						"items": ["froglins:healthiness_tonic"]
 					}
 				]
 			}
