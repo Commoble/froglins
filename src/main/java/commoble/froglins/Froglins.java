@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import commoble.froglins.client.ClientEvents;
+import commoble.froglins.data.FakeTagManager;
 import commoble.froglins.data.FroglinSpawnEntry;
 import commoble.froglins.util.ConfigHelper;
 import net.minecraft.core.Registry;
@@ -51,6 +52,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.brewing.BrewingRecipe;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
 import net.minecraftforge.common.crafting.NBTIngredient;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -81,6 +83,17 @@ public class Froglins
 	
 	public final ServerConfig serverConfig;
 	public final CommonConfig commonConfig;
+	public final FakeTagManager<MobEffect> mobEffectTags = new FakeTagManager<>(id ->{
+		// we need to do it this way because forge registries can return default values instead of nulls
+		if (ForgeRegistries.MOB_EFFECTS.containsKey(id))
+		{
+			return ForgeRegistries.MOB_EFFECTS.getValue(id);
+		}
+		else
+		{
+			return null;
+		}
+	}, "tags/mob_effects");
 	
 	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
 	public final RegistryObject<SpawnEggItem> froglinSpawnEggItem;
@@ -218,6 +231,7 @@ public class Froglins
 		modBus.addListener(this::onRegisterAttributes);
 		modBus.addListener(this::onCommonSetup);
 		
+		forgeBus.addListener(this::onRegisterServerReloadListeners);
 		forgeBus.addListener(EventPriority.HIGH, this::addThingsToBiomeOnBiomeLoad);
 
 		// add listeners to clientjar events separately
@@ -278,6 +292,11 @@ public class Froglins
 		PotionBrewing.addMix(Potions.STRONG_LEAPING, this.froglinEggItem.get(), this.frogChampionPotion.get());
 		PotionBrewing.addMix(this.frogChampionPotion.get(), Items.REDSTONE, this.longFrogChampionPotion.get());
 		PotionBrewing.addMix(this.frogsMightPotion.get(), Items.GLOWSTONE_DUST, this.strongFrogChampionPotion.get());
+	}
+	
+	private void onRegisterServerReloadListeners(AddReloadListenerEvent event)
+	{
+		event.addListener(this.mobEffectTags);
 	}
 	
 	private void addThingsToBiomeOnBiomeLoad(BiomeLoadingEvent event)

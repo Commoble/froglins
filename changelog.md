@@ -1,3 +1,7 @@
+## 1.17.1-2.0.0.2
+* Added datapack support to Healthiness Tonics. The effects curable by the tonic are now defined by tags at data/froglins/tags/mob_effects/healthiness_tonic_curable_effects.json
+* Added integration with Absolem Jackdaw's Bad to the Bone mod; tonics now cure arthritis, bad knees, bad vision, and back pain if both mods are present
+
 ## 1.17.1-2.0.0.1
 * Fixed invalid criteria in some advancements causing them to be awarded immediately (affects brew_tonic and froglin_rancher)
 
