@@ -1,21 +1,14 @@
 package commoble.froglins;
 
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import commoble.froglins.client.ClientEvents;
-import commoble.froglins.data.FakeTagManager;
-import commoble.froglins.data.FroglinSpawnEntry;
 import commoble.froglins.util.ConfigHelper;
 import net.minecraft.core.Registry;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.EntityTypeTags;
-import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -25,7 +18,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.SpawnPlacements.Type;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.decoration.Motive;
+import net.minecraft.world.entity.decoration.PaintingVariant;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
@@ -38,11 +31,10 @@ import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.MobSpawnSettings.SpawnerData;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockBehaviour.OffsetType;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
@@ -51,11 +43,8 @@ import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.brewing.BrewingRecipe;
 import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
-import net.minecraftforge.common.crafting.NBTIngredient;
-import net.minecraftforge.event.AddReloadListenerEvent;
+import net.minecraftforge.common.crafting.PartialNBTIngredient;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.event.world.BiomeLoadingEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -63,11 +52,10 @@ import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fmllegacy.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.IForgeRegistryEntry;
+import net.minecraftforge.registries.RegistryObject;
 
 @Mod(Froglins.MODID)
 public class Froglins
@@ -77,23 +65,12 @@ public class Froglins
 	
 	public static final Logger LOGGER = LogManager.getLogger();
 	
-	public static final Tag<Block> DIGGABLE_TAG = BlockTags.bind("froglins:diggable");
-	public static final Tag<EntityType<?>> EDIBLE_FISH_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_fish"));
-	public static final Tag<EntityType<?>> EDIBLE_ANIMALS_TAG = EntityTypeTags.createOptional(new ResourceLocation("froglins:edible_animals"));
+	public static final TagKey<Block> DIGGABLE_BLOCKS_TAG = TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(MODID, "diggable"));
+	public static final TagKey<EntityType<?>> EDIBLE_FISH_TAG = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(MODID, "edible_fish"));
+	public static final TagKey<EntityType<?>> EDIBLE_ANIMALS_TAG = TagKey.create(Registry.ENTITY_TYPE_REGISTRY, new ResourceLocation(MODID, "edible_animals"));
+	public static final TagKey<MobEffect> CURABLE_AILMENTS_TAG = TagKey.create(Registry.MOB_EFFECT_REGISTRY, new ResourceLocation(Froglins.MODID, "healthiness_tonic_curable_effects"));
 	
 	public final ServerConfig serverConfig;
-	public final CommonConfig commonConfig;
-	public final FakeTagManager<MobEffect> mobEffectTags = new FakeTagManager<>(id ->{
-		// we need to do it this way because forge registries can return default values instead of nulls
-		if (ForgeRegistries.MOB_EFFECTS.containsKey(id))
-		{
-			return ForgeRegistries.MOB_EFFECTS.getValue(id);
-		}
-		else
-		{
-			return null;
-		}
-	}, "tags/mob_effects");
 	
 	public final RegistryObject<FroglinEggBlock> froglinEggBlock;
 	public final RegistryObject<SpawnEggItem> froglinSpawnEggItem;
@@ -129,15 +106,14 @@ public class Froglins
 		IEventBus forgeBus = MinecraftForge.EVENT_BUS;
 		
 		this.serverConfig = ConfigHelper.register(modContext, fmlContext, ModConfig.Type.SERVER, ServerConfig::new);
-		this.commonConfig = ConfigHelper.register(modContext, fmlContext, ModConfig.Type.COMMON, CommonConfig::new);
 		
 		// create and register deferred registers
 		DeferredRegister<Block> blocks = registerRegister(modBus, ForgeRegistries.BLOCKS);
 		DeferredRegister<Item> items = registerRegister(modBus, ForgeRegistries.ITEMS);
-		DeferredRegister<EntityType<?>> entityTypes = registerRegister(modBus, ForgeRegistries.ENTITIES);
+		DeferredRegister<EntityType<?>> entityTypes = registerRegister(modBus, ForgeRegistries.ENTITY_TYPES);
 		DeferredRegister<MobEffect> effects = registerRegister(modBus, ForgeRegistries.MOB_EFFECTS);
 		DeferredRegister<Potion> potions = registerRegister(modBus, ForgeRegistries.POTIONS);
-		DeferredRegister<Motive> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_TYPES);
+		DeferredRegister<PaintingVariant> paintings = registerRegister(modBus, ForgeRegistries.PAINTING_VARIANTS);
 		DeferredRegister<SoundEvent> sounds = registerRegister(modBus, ForgeRegistries.SOUND_EVENTS);
 		
 		this.froglinEntityType = entityTypes.register(Names.FROGLIN, () ->
@@ -148,6 +124,7 @@ public class Froglins
 		this.froglinEggBlock = blocks.register(Names.FROGLIN_EGG,
 			() -> new FroglinEggBlock(
 				BlockBehaviour.Properties.of(Material.WATER_PLANT)
+					.offsetType(OffsetType.XYZ)
 					.noOcclusion()
 					.noCollission()
 					.randomTicks()
@@ -218,7 +195,7 @@ public class Froglins
 				new MobEffectInstance(MobEffects.JUMP, 900, 3),
 				new MobEffectInstance(frogsMightEffect.get(), 900, 1)));
 		
-		paintings.register(Names.FROGLIN, () -> new Motive(32,32));
+		paintings.register(Names.FROGLIN, () -> new PaintingVariant(32,32));
 		
 		this.froglinSoundAmbient = registerSound(sounds, Names.FROGLIN_SOUND_AMBIENT);
 		this.froglinSoundAngry = registerSound(sounds, Names.FROGLIN_SOUND_ANGRY);
@@ -230,9 +207,6 @@ public class Froglins
 		// other event listeners
 		modBus.addListener(this::onRegisterAttributes);
 		modBus.addListener(this::onCommonSetup);
-		
-		forgeBus.addListener(this::onRegisterServerReloadListeners);
-		forgeBus.addListener(EventPriority.HIGH, this::addThingsToBiomeOnBiomeLoad);
 
 		// add listeners to clientjar events separately
 		if (FMLEnvironment.dist == Dist.CLIENT)
@@ -294,24 +268,8 @@ public class Froglins
 		PotionBrewing.addMix(this.frogsMightPotion.get(), Items.GLOWSTONE_DUST, this.strongFrogChampionPotion.get());
 	}
 	
-	private void onRegisterServerReloadListeners(AddReloadListenerEvent event)
-	{
-		event.addListener(this.mobEffectTags);
-	}
-	
-	private void addThingsToBiomeOnBiomeLoad(BiomeLoadingEvent event)
-	{
-		ResourceKey<Biome> key = ResourceKey.create(Registry.BIOME_REGISTRY, event.getName());
-		List<SpawnerData> spawners = event.getSpawns().getSpawner(MobCategory.MONSTER);
-		
-		for (FroglinSpawnEntry entry : this.commonConfig.spawns.get())
-		{
-			entry.addToBiomeIfPermitted(key, spawners);
-		}
-	}
-	
 	// creates a DeferredRegister and subscribes it to the mod bus
-	private static <T extends IForgeRegistryEntry<T>> DeferredRegister<T> registerRegister(IEventBus modBus, IForgeRegistry<T> registry)
+	private static <T> DeferredRegister<T> registerRegister(IEventBus modBus, IForgeRegistry<T> registry)
 	{
 		DeferredRegister<T> register = DeferredRegister.create(registry, MODID);
 		register.register(modBus);
@@ -320,7 +278,8 @@ public class Froglins
 	
 	private static BrewingRecipe potionToItemRecipe(Item inputPotionItem, Potion inputPotion, Item catalyst, Item output)
 	{
-		Ingredient inputPotionIngredient = NBTIngredient.of(PotionUtils.setPotion(new ItemStack(inputPotionItem), inputPotion));
+		ItemStack potionStack = PotionUtils.setPotion(new ItemStack(inputPotionItem), inputPotion);
+		Ingredient inputPotionIngredient = PartialNBTIngredient.of(potionStack.getItem(), potionStack.getTag());
 		Ingredient catalystIngredient = Ingredient.of(catalyst);
 		ItemStack result = new ItemStack(output);
 		return new BrewingRecipe(inputPotionIngredient, catalystIngredient, result);

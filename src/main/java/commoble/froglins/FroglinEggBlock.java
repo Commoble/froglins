@@ -1,12 +1,11 @@
 package commoble.froglins;
 
-import java.util.Random;
-
 import javax.annotation.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -103,7 +102,7 @@ public class FroglinEggBlock extends Block implements SimpleWaterloggedBlock, Bo
 		{
 			if (stateIn.getValue(WATERLOGGED))
 			{
-				worldIn.getLiquidTicks().scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(worldIn));
+				worldIn.scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(worldIn));
 			}
 
 			@SuppressWarnings("deprecation")
@@ -117,15 +116,9 @@ public class FroglinEggBlock extends Block implements SimpleWaterloggedBlock, Bo
 	{
 		return SHAPE;
 	}
-
-	@Override
-	public OffsetType getOffsetType()
-	{
-		return OffsetType.XYZ;
-	}
 	
 	@Override
-	public void randomTick(BlockState state, ServerLevel world, BlockPos pos, Random random)
+	public void randomTick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random)
 	{
 		// make sure this block is correct
 		if (state.is(Froglins.INSTANCE.froglinEggBlock.get()))
@@ -148,7 +141,7 @@ public class FroglinEggBlock extends Block implements SimpleWaterloggedBlock, Bo
 		}
 	}
 	
-	protected void hatch(ServerLevel world, BlockPos pos, BlockState state, Random random)
+	protected void hatch(ServerLevel world, BlockPos pos, BlockState state, RandomSource random)
 	{
 		boolean persistant = state.getValue(PERSISTENT);
 		world.setBlockAndUpdate(pos, Blocks.WATER.defaultBlockState());
@@ -176,7 +169,8 @@ public class FroglinEggBlock extends Block implements SimpleWaterloggedBlock, Bo
 			|| world.getNearestPlayer(pos.getX(), pos.getY(), pos.getZ(), MobCategory.MONSTER.getNoDespawnDistance(), false) != null;
 	}
 	
-
+	@Override
+	@Deprecated
 	public FluidState getFluidState(BlockState state)
 	{
 		return state.getValue(WATERLOGGED) ? Fluids.WATER.getSource(false) : super.getFluidState(state);
@@ -193,7 +187,7 @@ public class FroglinEggBlock extends Block implements SimpleWaterloggedBlock, Bo
 	// called immediately after canGrow, only on servers
 	// if this returns true, grow will be called
 	@Override
-	public boolean isBonemealSuccess(Level world, Random rand, BlockPos pos, BlockState state)
+	public boolean isBonemealSuccess(Level world, RandomSource rand, BlockPos pos, BlockState state)
 	{
 		return this.canDefinitelyUseBonemeal(world, pos, state);
 	}
@@ -215,7 +209,7 @@ public class FroglinEggBlock extends Block implements SimpleWaterloggedBlock, Bo
 
 	// called when canUseBonemeal returns true on server
 	@Override
-	public void performBonemeal(ServerLevel world, Random rand, BlockPos pos, BlockState state)
+	public void performBonemeal(ServerLevel world, RandomSource rand, BlockPos pos, BlockState state)
 	{
 		int progress = state.getValue(HATCH_PROGRESS);
 		int progressRemaining = 15 - progress;

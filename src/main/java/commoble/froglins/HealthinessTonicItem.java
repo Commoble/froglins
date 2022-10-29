@@ -4,7 +4,6 @@ import java.util.List;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -17,9 +16,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class HealthinessTonicItem extends Item
 {
-	public static final Component TOOLTIP_0 = new TranslatableComponent("tooltip.froglins.tonic_of_healthiness_0").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
-	public static final Component TOOLTIP_1 = new TranslatableComponent("tooltip.froglins.tonic_of_healthiness_1").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
-	public static final Component TOOLTIP_2 = new TranslatableComponent("tooltip.froglins.tonic_of_healthiness_2").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
+	public static final Component TOOLTIP_0 = Component.translatable("tooltip.froglins.tonic_of_healthiness_0").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
+	public static final Component TOOLTIP_1 = Component.translatable("tooltip.froglins.tonic_of_healthiness_1").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
+	public static final Component TOOLTIP_2 = Component.translatable("tooltip.froglins.tonic_of_healthiness_2").withStyle(s -> s.applyFormat(ChatFormatting.GRAY));
 	
 	public HealthinessTonicItem(Properties properties)
 	{
@@ -40,14 +39,18 @@ public class HealthinessTonicItem extends Item
 		
 		if (player == null || !player.getAbilities().instabuild)
 		{
+			ItemStack remainingItem = this.getCraftingRemainingItem(stack);
 			if (stack.isEmpty())
 			{
-				return this.getContainerItem(stack);
+				return remainingItem;
 			}
 
 			if (player != null)
 			{
-				player.getInventory().add(this.getContainerItem(stack));
+				if (!player.getInventory().add(remainingItem))
+				{
+		               player.drop(remainingItem, false);
+				}
 			}
 		}
 

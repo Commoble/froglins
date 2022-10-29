@@ -1,14 +1,14 @@
 package commoble.froglins.ai;
 
 import java.util.EnumSet;
-import java.util.Random;
 
 import javax.annotation.Nullable;
 
 import commoble.froglins.FroglinEntity;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 // this is mostly the private goal from DrownedEntity with some adjustments
@@ -76,7 +76,7 @@ public class MoveToWaterGoal extends Goal
 	@Nullable
 	private Vec3 tryFindWater()
 	{
-		Random rand = this.froglin.getRandom();
+		RandomSource rand = this.froglin.getRandom();
 		BlockPos froglinPos = this.froglin.blockPosition();
 
 		for (int i = 0; i < 10; ++i)

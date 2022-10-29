@@ -1,0 +1,9 @@
+{
+	"values":
+	[
+		"#forge:is_cold",
+		"#forge:is_dry",
+		"#minecraft:is_ocean",
+		"#forge:is_underground"
+	]
+}

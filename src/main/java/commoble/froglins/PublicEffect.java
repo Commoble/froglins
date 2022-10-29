@@ -5,7 +5,7 @@ import net.minecraft.world.effect.MobEffectCategory;
 
 public class PublicEffect extends MobEffect
 {
-	// Effect constructor is private
+	// Effect constructor is protected
 	public PublicEffect(MobEffectCategory typeIn, int liquidColorIn)
 	{
 		super(typeIn, liquidColorIn);

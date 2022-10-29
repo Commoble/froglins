@@ -1,18 +1,15 @@
 package commoble.froglins;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Registry;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.InstantenousMobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 
 public class HealthinessEffect extends InstantenousMobEffect
-{
-	public static final ResourceLocation CURABLE_AILMENTS_ID = new ResourceLocation(Froglins.MODID, "healthiness_tonic_curable_effects");
-	
+{	
 	public HealthinessEffect(MobEffectCategory type, int liquidColor)
 	{
 		super(type, liquidColor);
@@ -31,9 +28,8 @@ public class HealthinessEffect extends InstantenousMobEffect
 			
 			if (!entity.level.isClientSide())
 			{
-				Froglins.INSTANCE.mobEffectTags.getTag(CURABLE_AILMENTS_ID)
-					.getValues()
-					.forEach(entity::removeEffect);
+				Registry.MOB_EFFECT.getTagOrEmpty(Froglins.CURABLE_AILMENTS_TAG)
+					.forEach(effectHolder -> entity.removeEffect(effectHolder.value()));
 				
 				if (entity instanceof Player)
 				{

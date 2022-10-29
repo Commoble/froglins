@@ -10,8 +10,6 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
-import net.minecraft.world.entity.ai.goal.Goal.Flag;
-
 public class SinkInWaterGoal extends Goal
 {
 	private final FroglinEntity froglin;
@@ -53,7 +51,7 @@ public class SinkInWaterGoal extends Goal
 						BlockPos aboveCheckPos = checkPos.above();
 						boolean tryDig = (checkPos.getX() == pos.getX() && checkPos.getZ() == pos.getZ()) || world.random.nextInt(4) == 0;
 						if (tryDig
-							&& Froglins.DIGGABLE_TAG.contains(world.getBlockState(checkPos).getBlock())
+							&& world.getBlockState(checkPos).is(Froglins.DIGGABLE_BLOCKS_TAG)
 							&& world.isWaterAt(aboveCheckPos)
 							&& world.getBlockState(aboveCheckPos).getMaterial().isReplaceable())
 						{

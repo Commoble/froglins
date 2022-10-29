@@ -1,8 +1,8 @@
 package commoble.froglins.client;
 
 import commoble.froglins.Froglins;
-import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 public class ClientEvents
@@ -27,8 +27,8 @@ public class ClientEvents
 		event.registerEntityRenderer(Froglins.INSTANCE.froglinEntityType.get(), FroglinRenderer::new);
 	}
 	
-	private static void onRegisterItemColors(ColorHandlerEvent.Item event)
+	private static void onRegisterItemColors(RegisterColorHandlersEvent.Item event)
 	{
-		event.getItemColors().register((stack,tint) -> tint > 0 ? -1 : 0x032f00, Froglins.INSTANCE.healthinessTonicItem.get());
+		event.register((stack,tint) -> tint > 0 ? -1 : 0x032f00, Froglins.INSTANCE.healthinessTonicItem.get());
 	}
 }

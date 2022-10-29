@@ -6,8 +6,6 @@ import java.util.function.Predicate;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 
-import net.minecraft.world.entity.ai.goal.Goal.Flag;
-
 /**
  * Wrapper class around another Goal that allows the delegated goal to start or continue executing
  * when its given condition is true for its owner entity.

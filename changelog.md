@@ -1,3 +1,10 @@
+## 1.19.2-3.0.0.0
+* Froglin spawn biomes are now configured via datapacks via forge biome modifiers instead of config files
+* Froglin spawns in swamps and wetlands are configured via data/froglins/forge/biome_modifier/common_froglin_spawns.json, which by default spawns froglins in any overworld biome in the froglins:common_froglin_spawns biome tag, but not in the froglins:no_common_froglin_spawns biome tag
+* Froglin spawns in rivers are configured via data/froglins/forge/biome_modifier/rare_froglin_spawns.json, which by default spawns froglins in any overworld biome in the froglins:rare_froglin_spawns biome tag, but not in the froglins:no_froglin_spawns biome tag
+* Fixed a bug where consuming a healthiness tonic while inventory was full would not produce a glass bottle
+* Moved the froglins:healthiness_tonic_curable_effects mob effect tag from tags/mob_effects to tags/mob_effect as minecraft loads mob effect tags itself now and that's where it loads them from
+
 ## 1.17.1-2.0.0.2
 * Added datapack support to Healthiness Tonics. The effects curable by the tonic are now defined by tags at data/froglins/tags/mob_effects/healthiness_tonic_curable_effects.json
 * Added integration with Absolem Jackdaw's Bad to the Bone mod; tonics now cure arthritis, bad knees, bad vision, and back pain if both mods are present

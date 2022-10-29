@@ -1,7 +1,5 @@
 package commoble.froglins;
 
-import java.util.Random;
-
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
@@ -37,9 +35,9 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -78,7 +76,7 @@ public class FroglinEntity extends Monster
 			.add(Attributes.ATTACK_DAMAGE, 4.0D);
 	}
 	
-	public static boolean canRandomlySpawn(EntityType<FroglinEntity> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, Random rand)
+	public static boolean canRandomlySpawn(EntityType<FroglinEntity> type, ServerLevelAccessor world, MobSpawnType reason, BlockPos pos, RandomSource rand)
 	{
 		int minY = world.getSeaLevel() - 5;
 		int y = pos.getY();
@@ -124,10 +122,10 @@ public class FroglinEntity extends Monster
 			new HurtByTargetGoal(this).setAlertOthers(),
 			FroglinEntity::wantsToRetaliate));
 		this.targetSelector.addGoal(3, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, Mob.class, 20, false, false, entity -> Froglins.EDIBLE_FISH_TAG.contains(entity.getType())),
+			new NearestAttackableTargetGoal<>(this, Mob.class, 20, false, false, entity -> entity.getType().is(Froglins.EDIBLE_FISH_TAG)),
 			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(4, new PredicatedGoal<>(this,
-			new NearestAttackableTargetGoal<>(this, Mob.class, 40, false, false, entity -> Froglins.EDIBLE_ANIMALS_TAG.contains(entity.getType())),
+			new NearestAttackableTargetGoal<>(this, Mob.class, 40, false, false, entity -> entity.getType().is(Froglins.EDIBLE_ANIMALS_TAG)),
 			FroglinEntity::wantsToHunt));
 		this.targetSelector.addGoal(5, new PredicatedGoal<>(this,
 			new NearestAttackableTargetGoal<>(this, Player.class, 100, false, false, null),
@@ -292,11 +290,11 @@ public class FroglinEntity extends Monster
 
 	// called when this entity kills another entity
 	@Override
-	public void killed(ServerLevel world, LivingEntity killedEntity)
+	public boolean wasKilled(ServerLevel world, LivingEntity killedEntity)
 	{
-		super.killed(world, killedEntity);
 		this.data.addFullness(Froglins.INSTANCE.serverConfig.froglinFullnessFromKill.get());
 		this.data.addEggs(1);
+		return super.wasKilled(world, killedEntity);
 	}
 
 	@Override
@@ -387,7 +385,8 @@ public class FroglinEntity extends Monster
 		return !this.level.isDay() || 
 			(this.level.isRaining() &&
 				this.level.getBiome(this.blockPosition())
-				.getPrecipitation() == Precipitation.RAIN);
+					.value()
+					.getPrecipitation() == Precipitation.RAIN);
 	}
 	
 	public boolean wantsToRetaliate()
