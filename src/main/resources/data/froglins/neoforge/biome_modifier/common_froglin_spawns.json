@@ -1,0 +1,22 @@
+{
+	"type": "neoforge:add_spawns",
+	"spawners":
+	{
+		"type": "froglins:froglin",
+		"weight": 50,
+		"minCount": 1,
+		"maxCount": 4	
+	},
+	"biomes": {
+		"type": "neoforge:and",
+		"values":
+		[
+			"#froglins:common_froglin_spawns",
+			"#minecraft:is_overworld",
+			{
+				"type": "neoforge:not",
+				"value": "#froglins:no_common_froglin_spawns"
+			}
+		]
+	}
+}

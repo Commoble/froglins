@@ -1,0 +1,45 @@
+package net.commoble.froglins.ai;
+
+import java.util.EnumSet;
+
+import net.commoble.froglins.FroglinEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+
+public class SwimUpOrDownGoal extends FloatGoal
+{
+	private final FroglinEntity froglin; 
+
+	public SwimUpOrDownGoal(FroglinEntity froglin)
+	{
+		super(froglin);
+		this.froglin = froglin;
+		this.setFlags(EnumSet.of(Goal.Flag.JUMP));
+	}
+
+	/**
+	 * Returns whether execution should begin. You can also read and cache any state
+	 * necessary for execution in this method as well.
+	 */
+	@Override
+	public boolean canUse()
+	{
+		LivingEntity target = this.froglin.getTarget();
+		return target != null
+			&& this.froglin.isInWater();
+	}
+
+	@Override
+	public void tick()
+	{
+		LivingEntity target = this.froglin.getTarget();
+		if (target != null && (!target.isInWater() || this.froglin.getY() < target.getY()) && this.froglin.getRandom().nextFloat() < 0.8F)
+		{
+			this.froglin.getJumpControl().jump();
+		}
+		else if (target != null && target.isInWater() && this.froglin.getY() > target.getY()) {
+			this.froglin.setJumping(false);
+		}
+	}
+}

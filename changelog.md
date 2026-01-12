@@ -1,3 +1,11 @@
+## 21.11.0
+* Updated to MC 1.21.11 / Neoforge 21.1.13-beta
+* Improved saturation from eating froglin eyes
+* Renamed Healthiness Tonic to Frogade (id is now froglins:frogade). It now stacks.
+* Froglin spawn egg now has unique texture consistent with other spawn eggs
+* Frog's Might potion is now greener
+
+
 ## 1.19.2-3.0.0.0
 * Froglin spawn biomes are now configured via datapacks via forge biome modifiers instead of config files
 * Froglin spawns in swamps and wetlands are configured via data/froglins/forge/biome_modifier/common_froglin_spawns.json, which by default spawns froglins in any overworld biome in the froglins:common_froglin_spawns biome tag, but not in the froglins:no_common_froglin_spawns biome tag

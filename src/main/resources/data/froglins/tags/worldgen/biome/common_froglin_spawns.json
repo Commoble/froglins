@@ -1,7 +1,7 @@
 {
 	"values":
 	[
-		"#forge:is_swamp",
-		"#forge:is_wet"
+		"#c:is_swamp",
+		"#c:is_wet"
 	]
 }

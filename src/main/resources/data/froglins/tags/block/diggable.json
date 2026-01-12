@@ -1,0 +1,11 @@
+{
+	"replace": false,
+	"values":
+	[
+		"#dirt",
+		"#c:sands",
+		"#sand",
+		"#c:gravels",
+		"#c:clay"
+	]
+}

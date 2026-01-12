@@ -1,0 +1,9 @@
+{
+	"asset_id": "froglins:froglin",
+	"width": 2,
+	"height": 2,
+	"title": {
+		"color": "yellow",
+		"translate": "painting.froglins.froglin.title"
+	}
+}

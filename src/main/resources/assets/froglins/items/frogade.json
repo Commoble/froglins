@@ -1,0 +1,10 @@
+{
+	"model": {
+		"type": "model",
+		"model": "item/potion",
+		"tints": [
+			{"type": "constant", "value": 208640},
+			{"type": "constant", "value": -1}
+		]
+	}
+}

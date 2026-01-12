@@ -1,0 +1,38 @@
+{
+	"parent": "minecraft:nether/brew_potion",
+	"display": 
+	{
+		"icon": 
+		{
+			"id": "froglins:frogade"
+		},
+		"title": 
+		{
+			"translate": "froglins.advancements.nether.brew_frogade.title"
+		},
+		"description": 
+		{
+			"translate": "froglins.advancements.nether.brew_frogade.description"
+		},
+		"frame": "goal",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": 
+	{
+		"brew_frogade": 
+		{
+			"trigger": "minecraft:inventory_changed",
+			"conditions": 
+			{
+				"items": 
+				[
+					{
+						"items": "froglins:frogade"
+					}
+				]
+			}
+		}
+	}
+}

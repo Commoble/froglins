@@ -1,0 +1,43 @@
+{
+	"parent": "minecraft:adventure/root",
+	"display": 
+	{
+		"icon": 
+		{
+			"id": "froglins:froglin_eye"
+		},
+		"title": 
+		{
+			"translate": "froglins.advancements.adventure.froglin_hunter.title"
+		},
+		"description": 
+		{
+			"translate": "froglins.advancements.adventure.froglin_hunter.description"
+		},
+		"frame": "task",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": 
+	{
+		"slay_froglin": 
+		{
+			"trigger": "minecraft:player_killed_entity",
+			"conditions": 
+			{
+				"entity": 
+				[
+					{
+						"condition": "minecraft:entity_properties",
+						"predicate": 
+						{
+							"type": "froglins:froglin"
+						},
+						"entity": "this"
+					}
+				]
+			}
+		}
+	}
+}

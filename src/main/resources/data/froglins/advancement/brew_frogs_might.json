@@ -1,0 +1,44 @@
+{
+	"parent": "minecraft:nether/brew_potion",
+	"display": 
+	{
+		"icon": 
+		{
+			"id": "minecraft:potion",
+			"components": {
+				"potion_contents": "froglins:frogs_might"
+			}
+		},
+		"title": 
+		{
+			"translate": "froglins.advancements.nether.brew_frogs_might.title"
+		},
+		"description": 
+		{
+			"translate": "froglins.advancements.nether.brew_frogs_might.description"
+		},
+		"frame": "goal",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": 
+	{
+		"brew_potion": 
+		{
+			"trigger": "minecraft:inventory_changed",
+			"conditions": 
+			{
+				"items": 
+				[
+					{
+						"id": "minecraft:potion",
+						"components": {
+							"potion_contents": "froglins:frogs_might"
+						}
+					}
+				]
+			}
+		}
+	}
+}
